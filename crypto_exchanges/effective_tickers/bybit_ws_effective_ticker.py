@@ -1,63 +1,91 @@
-import time
 from dataclasses import dataclass
+from typing import Protocol
 
-import ccxt
+import numpy as np
 import pybotters
+
+from crypto_exchanges.entity.execution import Execution
+from crypto_exchanges.entity.orderbook import Orderbook, OrderbookItem
 
 
 @dataclass
-class BybitWsEffectiveTickerConfig:
+class _BybitWsEffectiveTickerConfig:
     symbol: str
-    amount: float = 0.1
+    target_volume: float = 0.1
+
+
+class IBybitRepository(Protocol):
+    def sorted_orderbook(self) -> Orderbook: ...
+    def trades(self) -> list[Execution]: ...
 
 
 class BybitWsEffectiveTicker:
     def __init__(
         self,
-        store: pybotters.BybitDataStore,
-        config: BybitWsEffectiveTickerConfig,
+        repository: IBybitRepository,
+        symbol: str,
+        target_volume: float,
     ):
+        self._repository = repository
+        self._config = _BybitWsEffectiveTickerConfig(
+            symbol=symbol,
+            target_volume=target_volume,
+        )
 
-        self._store = store
-        self._config = config
-
-    def _get_bid_ask(self) -> tuple:
-        last = {"Buy": 0.0, "Sell": 0.0}
-        books = self._store.orderbook.sorted()
-        amount = self._config.amount
-        trade_amount = {"Buy": amount, "Sell": amount}
-        list = ["Buy", "Sell"]
-        for l in list:
-            index = 0
-            max_index = len(books[l])
-            while trade_amount[l] > 0:
-                price = float(books[l][index]["price"])
-                size = float(books[l][index]["size"])
-                if trade_amount[l] > size:
-                    last[l] += price * size
-                    trade_amount[l] -= size
-                    index += 1
-                    if index == max_index:
-                        last[l] /= amount - trade_amount[l]
-                        break
-                else:
-                    last[l] += price * trade_amount[l]
-                    last[l] /= amount
-                    trade_amount[l] = 0
-        return last["Buy"], last["Sell"]
+    def _get_bid_ask(self) -> tuple[float, float]:
+        target_volume = self._config.target_volume
+        orderbook = self._repository.sorted_orderbook()
+        bid_price = _get_effective_price(orderbook.bid, target_volume)
+        ask_price = _get_effective_price(orderbook.ask, target_volume)
+        return bid_price, ask_price
 
     def bid_price(self) -> float:
-        bid, _ = self._get_bid_ask()
-        return bid
+        bid_price, _ = self._get_bid_ask()
+        return bid_price
 
     def ask_price(self) -> float:
-        _, ask = self._get_bid_ask()
-        return ask
+        _, ask_price = self._get_bid_ask()
+        return ask_price
 
     def last_price(self) -> float:
-        trades = self._store.trade.find()
-
-        # 履歴がない場合はask bidの中央を返す
+        trades = self._repository.trades()
         if len(trades) == 0:
             return (self.bid_price() + self.ask_price()) * 0.5
-        return float(trades[-1]["price"])
+        return trades[-1].price
+
+
+def _get_effective_price(
+    orderbook_items: list[OrderbookItem],
+    target_volume: float,
+) -> float:
+    """指定したvolumeをtakeする際の取得価格の平均を計算する
+
+    Args:
+        orderbook_items (list[OrderbookItem]): orderbookのask or bidのlist
+        target_volume (float): 取得するvolume
+
+    Returns:
+        float: 取得価格の平均
+    """
+    total_price = 0.0
+    rest_volume = target_volume
+    for item in orderbook_items:
+        volume = item.volume
+        price = item.price
+
+        if rest_volume > volume:
+            # 残りのvolumeよりitemのvolumeのほうが小さい場合は、そのまま加重
+            total_price += price * volume
+            rest_volume -= volume
+        else:
+            # 残りのvolumeよりitemのvolumeのほうが大きい場合は、残りのvolumeで加重
+            total_price += price * rest_volume
+            rest_volume = 0
+
+        # rest_volumeが0になったら、加重平均の分母で割る
+        if rest_volume == 0:
+            total_price /= target_volume
+            break
+    if total_price == 0.0:
+        return np.nan
+    return total_price
