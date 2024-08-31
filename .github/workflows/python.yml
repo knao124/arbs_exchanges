@@ -1,0 +1,31 @@
+name: python
+on:
+  push:
+    branches:
+      - "**"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Run tests
+        working-directory: ./
+        run: |
+          docker compose run --rm py python -m pytest --cov=. --cov-branch
+        timeout-minutes: 10
+        # env:
+        #   BYBIT_API_KEY: ${{ secrets.BYBIT_API_KEY }}
+        #   BYBIT_SECRET: ${{ secrets.BYBIT_SECRET }}
+
+      - name: Notify Slack
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: "テスト結果: ${{ job.status }}"
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: always()
