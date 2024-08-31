@@ -1,0 +1,13 @@
+# pip freeze | grep -e autopep8 -e ccxt -e dydx-v3-python -e flake8 -e numpy -e pandas-datareader -e pybotters -e pytest -e python-dotenv -e pytest-cov -e PyYAML -e web3
+ccxt
+numpy
+numba
+pybotters
+pytest
+pytest-asyncio
+pytest-cov
+pytest-mock
+python-dotenv
+PyYAML
+slack_sdk
+yfinance
