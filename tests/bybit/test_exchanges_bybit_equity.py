@@ -1,6 +1,6 @@
 import pytest
 
-from crypto_exchanges.bybit import BybitEquityGetter, init_ccxt_exchange
+from crypto_exchanges.bybit import BybitEquityGetter
 from crypto_exchanges.yahoo import YahooFXTicker
 
 from .utils import skip_if_secret_not_set_bybit
