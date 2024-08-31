@@ -2,7 +2,7 @@ import pybotters
 
 
 class BybitWsExecution:
-    def __init__(self, store: pybotters.BybitUSDTDataStore):
+    def __init__(self, store: pybotters.BybitDataStore):
         self._store = store
 
     def latest_executions(self) -> list:

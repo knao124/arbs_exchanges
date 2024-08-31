@@ -13,7 +13,7 @@ async def start_bybit_ws_inverse(api_key: str, secret: str, symbol: str, testnet
         apis={"bybit": [api_key, secret], "bybit_testnet": [api_key, secret]},
         base_url=_rest_endpoint(testnet),
     )
-    store = pybotters.BybitInverseDataStore()
+    store = pybotters.BybitDataStore()
 
     channels = [
         f"trade.{symbol}",
@@ -33,7 +33,7 @@ async def start_bybit_ws_inverse(api_key: str, secret: str, symbol: str, testnet
 
 
 # errorのmsgにアクセスできるように変更したpybotters.DataStore
-class _BybitUSDTDataStore(pybotters.BybitUSDTDataStore):
+class _BybitDataStore(pybotters.BybitDataStore):
     def __init__(self):
         super().__init__()
         self.errors = queue.Queue(maxsize=10)
@@ -49,12 +49,12 @@ async def start_bybit_ws_linear(
     secret: str,
     symbol: str,
     testnet: bool,
-) -> Tuple[pybotters.Client, _BybitUSDTDataStore]:
+) -> Tuple[pybotters.Client, _BybitDataStore]:
     client = pybotters.Client(
         apis={"bybit": [api_key, secret], "bybit_testnet": [api_key, secret]},
         base_url=_rest_endpoint(testnet),
     )
-    store = _BybitUSDTDataStore()
+    store = _BybitDataStore()
     await initialize_position(client, store, symbol)
 
     public_channels = [
@@ -94,7 +94,7 @@ async def start_bybit_ws_linear(
 
 async def initialize_position(
     client: pybotters.Client,
-    store: pybotters.BybitInverseDataStore or pybotters.BybitUSDTDataStore,
+    store: pybotters.BybitDataStore or pybotters.BybitDataStore,
     symbol: str,
 ):
     if "USDT" in symbol:  # linear

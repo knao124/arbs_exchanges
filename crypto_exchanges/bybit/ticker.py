@@ -117,7 +117,7 @@ class _BybitWsTickerConfig:
 class BybitWsTicker:
     def __init__(
         self,
-        store: pybotters.BybitInverseDataStore or pybotters.BybitUSDTDataStore,
+        store: pybotters.BybitDataStore or pybotters.BybitDataStore,
         symbol: str,
     ):
 
@@ -150,7 +150,7 @@ class BybitWsEffectiveTickerConfig:
 class BybitWsEffectiveTicker:
     def __init__(
         self,
-        store: pybotters.BybitInverseDataStore or pybotters.BybitUSDTDataStore,
+        store: pybotters.BybitDataStore or pybotters.BybitDataStore,
         config: BybitWsEffectiveTickerConfig,
     ):
 

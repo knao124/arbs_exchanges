@@ -40,7 +40,7 @@ class BybitRestPositionGetter:
 class BybitWsPositionGetter:
     def __init__(
         self,
-        store: pybotters.BybitInverseDataStore or pybotters.BybitUSDTDataStore,
+        store: pybotters.BybitDataStore or pybotters.BybitDataStore,
         symbol: str,
     ):
 

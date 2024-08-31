@@ -4,7 +4,6 @@ from .execution import BybitWsExecution
 from .fee import BybitFeeGetter
 from .orderer import BybitOrderer, USDJPYOrderLinkIdGenerator
 from .position import BybitRestPositionGetter, BybitWsPositionGetter
-from .resolver import init_ccxt_exchange, tick_logger, ws_client_set
 from .ticker import (
     BybitRestEffectiveTicker,
     BybitRestEffectiveTickerConfig,
