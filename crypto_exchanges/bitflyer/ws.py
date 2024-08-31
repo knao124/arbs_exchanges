@@ -8,7 +8,7 @@ from logging import getLogger
 import aiohttp
 import pybotters
 
-from arbs.logger import get_rotating_csv_logger
+from crypto_exchanges.logger import get_rotating_csv_logger
 
 # ref: https://github.com/ko0hi/pybotters-magito-mm/blob/master/main.py
 # ref: https://bf-lightning-api.readme.io/docs/realtime-executions
