@@ -22,10 +22,11 @@ jobs:
         #   BYBIT_API_KEY: ${{ secrets.BYBIT_API_KEY }}
         #   BYBIT_SECRET: ${{ secrets.BYBIT_SECRET }}
 
-      - name: Notify Slack
+      - name: Notify result to Slack
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
-          text: "テスト結果: ${{ job.status }}"
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took,pullRequest
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         if: always()
