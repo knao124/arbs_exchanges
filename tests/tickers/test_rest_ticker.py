@@ -1,7 +1,7 @@
 import ccxt
 import pytest
 
-from crypto_exchanges.rest.bybit_rest_repository import BybitRestRepository
+from crypto_exchanges.repository.bybit.bybit_rest_repository import BybitRestRepository
 from crypto_exchanges.tickers.rest_ticker import RestTicker
 
 

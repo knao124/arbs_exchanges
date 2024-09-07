@@ -1,8 +1,8 @@
 import pybotters
 import pytest
 
+from crypto_exchanges.repository.bybit.bybit_ws_repository import BybitWsRepository
 from crypto_exchanges.utils import kill_all_asyncio_tasks
-from crypto_exchanges.ws.bybit_ws_repository import BybitWsRepository
 
 
 @pytest.mark.asyncio

@@ -1,6 +1,6 @@
+from crypto_exchanges.repository.bybit.bybit_mock_datastore import BybitMockDataStore
+from crypto_exchanges.repository.bybit.bybit_ws_repository import BybitWsRepository
 from crypto_exchanges.tickers.ws_effective_ticker import WsEffectiveTicker
-from crypto_exchanges.ws.bybit_mock_datastore import BybitMockDataStore
-from crypto_exchanges.ws.bybit_ws_repository import BybitWsRepository
 
 
 def test_bybit_ws_effective_ticker():
