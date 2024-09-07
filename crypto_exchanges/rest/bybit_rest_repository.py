@@ -7,7 +7,7 @@ from crypto_exchanges.entity.execution import Execution
 from crypto_exchanges.entity.orderbook import Orderbook, OrderbookItem
 
 
-class BybitCcxtRepository:
+class BybitRestRepository:
     def __init__(self, ccxt_exchange: ccxt.Exchange):
         self._ccxt_exchange = ccxt_exchange
 

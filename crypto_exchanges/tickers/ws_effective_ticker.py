@@ -1,34 +1,31 @@
 from dataclasses import dataclass
 from typing import Protocol
 
-import numpy as np
-import pybotters
-
-from crypto_exchanges.effective_tickers.common import _get_effective_price
 from crypto_exchanges.entity.execution import Execution
 from crypto_exchanges.entity.orderbook import Orderbook
+from crypto_exchanges.tickers.common import get_effective_price
 
 
-@dataclass
-class _BybitWsEffectiveTickerConfig:
-    symbol: str
-    target_volume: float = 0.1
-
-
-class IBybitRepository(Protocol):
+class IWsRepository(Protocol):
     def sorted_orderbook(self) -> Orderbook: ...
     def trades(self) -> list[Execution]: ...
 
 
-class BybitWsEffectiveTicker:
+@dataclass
+class _WsEffectiveTickerConfig:
+    symbol: str
+    target_volume: float
+
+
+class WsEffectiveTicker:
     def __init__(
         self,
-        repository: IBybitRepository,
+        repository: IWsRepository,
         symbol: str,
         target_volume: float,
     ):
         self._repository = repository
-        self._config = _BybitWsEffectiveTickerConfig(
+        self._config = _WsEffectiveTickerConfig(
             symbol=symbol,
             target_volume=target_volume,
         )
@@ -36,8 +33,8 @@ class BybitWsEffectiveTicker:
     def _get_bid_ask(self) -> tuple[float, float]:
         target_volume = self._config.target_volume
         orderbook = self._repository.sorted_orderbook()
-        bid_price = _get_effective_price(orderbook.bid, target_volume)
-        ask_price = _get_effective_price(orderbook.ask, target_volume)
+        bid_price = get_effective_price(orderbook.bid, target_volume)
+        ask_price = get_effective_price(orderbook.ask, target_volume)
         return bid_price, ask_price
 
     def bid_price(self) -> float:

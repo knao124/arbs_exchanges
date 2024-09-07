@@ -2,31 +2,30 @@ from dataclasses import dataclass
 from typing import Protocol
 
 import numpy as np
-import pybotters
 
 from crypto_exchanges.entity.execution import Execution
 from crypto_exchanges.entity.orderbook import Orderbook
 
 
-class IBybitRepository(Protocol):
+class IWsRepository(Protocol):
     def sorted_orderbook(self) -> Orderbook: ...
     def trades(self) -> list[Execution]: ...
 
 
 @dataclass
-class _BybitWsTickerConfig:
+class _WsTickerConfig:
     symbol: str
 
 
-class BybitWsTicker:
+class WsTicker:
     def __init__(
         self,
-        repository: IBybitRepository,
+        repository: IWsRepository,
         symbol: str,
     ):
 
         self._repository = repository
-        self._config = _BybitWsTickerConfig(symbol=symbol)
+        self._config = _WsTickerConfig(symbol=symbol)
 
     def bid_price(self) -> float:
         orderbook = self._repository.sorted_orderbook()

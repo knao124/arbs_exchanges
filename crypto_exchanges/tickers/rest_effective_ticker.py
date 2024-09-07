@@ -4,12 +4,12 @@ from typing import Optional, Protocol
 
 import numpy as np
 
-from crypto_exchanges.effective_tickers.common import _get_effective_price
 from crypto_exchanges.entity.execution import Execution
 from crypto_exchanges.entity.orderbook import Orderbook
+from crypto_exchanges.tickers.common import get_effective_price
 
 
-class IBybitRepository(Protocol):
+class IRestRepository(Protocol):
     def fetch_order_book(
         self, symbol: str, limit: Optional[int] = None
     ) -> Orderbook: ...
@@ -20,22 +20,22 @@ class IBybitRepository(Protocol):
 
 
 @dataclass
-class _BybitRestEffectiveTickerConfig:
+class _RestEffectiveTickerConfig:
     symbol: str
-    update_limit_sec: float = 0.5
-    amount: float = 0.01
+    target_volume: float
+    update_limit_sec: float
 
 
-class BybitRestEffectiveTicker:
+class RestEffectiveTicker:
     def __init__(
         self,
-        repository: IBybitRepository,
-        target_volume: float,
+        repository: IRestRepository,
         symbol: str,
+        target_volume: float,
         update_limit_sec: float,
     ):
         self._repository = repository
-        self._config = _BybitRestEffectiveTickerConfig(
+        self._config = _RestEffectiveTickerConfig(
             symbol=symbol,
             update_limit_sec=update_limit_sec,
             target_volume=target_volume,
@@ -66,12 +66,12 @@ class BybitRestEffectiveTicker:
 
     def _get_bid_ask(self) -> tuple:
         if time.time() - self._last_ts2 >= self._config.update_limit_sec:
-            target_volume = self._config.amount
+            target_volume = self._config.target_volume
             orderbook = self._repository.fetch_order_book(
                 symbol=self._config.symbol, limit=1
             )
-            bid_price = _get_effective_price(orderbook.bid, target_volume)
-            ask_price = _get_effective_price(orderbook.ask, target_volume)
+            bid_price = get_effective_price(orderbook.bid, target_volume)
+            ask_price = get_effective_price(orderbook.ask, target_volume)
             self._last_bid_price = bid_price
             self._last_ask_price = ask_price
             self._last_ts2 = time.time()

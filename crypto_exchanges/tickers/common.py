@@ -3,7 +3,7 @@ import numpy as np
 from crypto_exchanges.entity.orderbook import OrderbookItem
 
 
-def _get_effective_price(
+def get_effective_price(
     orderbook_items: list[OrderbookItem],
     target_volume: float,
 ) -> float:

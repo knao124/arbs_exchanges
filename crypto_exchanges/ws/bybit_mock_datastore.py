@@ -1,6 +1,14 @@
 from typing import Optional
 
 
+class BybitMockDataStore:
+    def __init__(
+        self, orderbook: Optional[dict] = None, trade: Optional[list[dict]] = None
+    ):
+        self.orderbook = DummyOrderbook(data=orderbook)
+        self.trade = DummyTrade(data=trade)
+
+
 class DummyTrade:
     def __init__(self, data: Optional[list[dict]] = None):
         self.data = data
@@ -446,11 +454,3 @@ class DummyOrderbook:
                 {"s": "BTCUSDT", "S": "b", "p": "59059.90", "v": "0.949"},
             ],
         }
-
-
-class BybitMockDataStore:
-    def __init__(
-        self, orderbook: Optional[dict] = None, trade: Optional[list[dict]] = None
-    ):
-        self.orderbook = DummyOrderbook(data=orderbook)
-        self.trade = DummyTrade(data=trade)

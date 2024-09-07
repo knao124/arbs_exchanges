@@ -1,17 +1,18 @@
 import pybotters
 import pytest
 
-from crypto_exchanges.pybotters.bybit_mock_datastore import BybitMockDataStore
-from crypto_exchanges.pybotters.bybit_repository import BybitRepository
-from crypto_exchanges.tickers.bybit_ws_ticker import BybitWsTicker
 from crypto_exchanges.utils import kill_all_asyncio_tasks
+from crypto_exchanges.ws.bybit_ws_repository import BybitWsRepository
 
 
 @pytest.mark.asyncio
-async def test_pybotters_bybit_datastore():
+async def test_pybotters_bybit_datastore_real():
+    """BybitのWebsocketのRepositoryを実際のendpointに接続してテストする"""
+
     async with pybotters.Client() as client:
+        # データストアを作成
         store = pybotters.BybitDataStore()
-        repo = BybitRepository(store=store)
+        repo = BybitWsRepository(store=store)
         await client.ws_connect(
             "wss://stream.bybit.com/v5/public/linear",
             send_json={

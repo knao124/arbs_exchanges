@@ -5,7 +5,7 @@ from crypto_exchanges.entity.execution import Execution
 from crypto_exchanges.entity.orderbook import Orderbook, OrderbookItem
 
 
-class BybitRepository:
+class BybitWsRepository:
     """BybitDataStoreのデータを型安全に取得する"""
 
     def __init__(self, store: pybotters.BybitDataStore):
