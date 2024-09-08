@@ -6,7 +6,7 @@ from crypto_exchanges.utils import kill_all_asyncio_tasks
 
 
 @pytest.mark.asyncio
-async def test_pybotters_bybit_datastore_real():
+async def test_bybit_ws_repository_real():
     """BybitのWebsocketのRepositoryを実際のendpointに接続してテストする"""
 
     async with pybotters.Client() as client:

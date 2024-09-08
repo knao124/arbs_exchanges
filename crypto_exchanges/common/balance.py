@@ -41,6 +41,7 @@ class CcxtBalanceGetter:
 
     def _balance_resp(self):
         """
+        https://docs.ccxt.com/#/?id=balance-structure
         ref: https://docs.ccxt.com/en/latest/manual.html?#balance-structure
         """
         if time.time() - self._last_ts >= self._update_limit_sec:
