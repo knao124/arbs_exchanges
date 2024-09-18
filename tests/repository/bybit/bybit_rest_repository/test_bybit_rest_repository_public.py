@@ -3,7 +3,7 @@ import ccxt
 from crypto_exchanges.repository.bybit.bybit_rest_repository import BybitRestRepository
 
 
-def test_bybit_rest_repository_fetch_order_book():
+def test_bybit_rest_repository_fetch_order_book_public():
     repo = BybitRestRepository(ccxt.bybit())
     orderbook = repo.fetch_order_book("BTCUSDT", limit=1)
 
@@ -11,7 +11,7 @@ def test_bybit_rest_repository_fetch_order_book():
     assert len(orderbook.ask) == 1
 
 
-def test_bybit_rest_repository_fetch_trades():
+def test_bybit_rest_repository_fetch_trades_public():
     repo = BybitRestRepository(ccxt.bybit())
     trades = repo.fetch_trades("BTCUSDT", limit=1)
 

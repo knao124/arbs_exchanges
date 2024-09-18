@@ -2,7 +2,7 @@
 from crypto_exchanges.repository.bybit.bybit_rest_repository import BybitRestRepository
 
 
-def test_mock_bybit_rest_repository_fetch_balance():
+def test_bybit_rest_repository_fetch_balance_mock():
     # 依存先のccxtをmockする
     class MockCcxt:
         def fetch_balance(self):
