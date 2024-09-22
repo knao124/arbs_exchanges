@@ -7,7 +7,7 @@ from crypto_exchanges.core.domain.entities import (
     OrderBookItem,
     Position,
 )
-from crypto_exchanges.core.domain.interfaces import (
+from crypto_exchanges.core.domain.repositories import (
     IExecutionRepository,
     IOrderBookRepository,
 )

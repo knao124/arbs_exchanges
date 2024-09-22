@@ -1,9 +1,10 @@
-from typing import Protocol
+from decimal import Decimal
 
-from crypto_exchanges.core.domain.interfaces import IPositionGetter, IPositionRepository
+from crypto_exchanges.core.domain.repositories import IPositionRepository
+from crypto_exchanges.core.exceptions import UnexpectedSpecError
 
 
-class PositionGetter(IPositionGetter):
+class PositionGetter:
     def __init__(
         self,
         repository: IPositionRepository,
@@ -13,22 +14,36 @@ class PositionGetter(IPositionGetter):
         self._repository = repository
         self._symbol = symbol
 
-    def current_position(self) -> float:
+    def current_position(self) -> Decimal:
         """
         現在のポジションを返す
 
         Returns:
             float or int: ポジションの大きさ
         """
-        position = self._repository.position()
-        return position.size
+        positions = self._repository.fetch_positions()
+        if len(positions) == 0:
+            return Decimal(0)
 
-    def avg_price(self) -> float:
+        total = Decimal(0)
+        for pos in positions:
+            base_size = pos.size
+            if base_size is None:
+                continue
+            total += Decimal(base_size) * pos.side_int
+        return total
+
+    def avg_price(self) -> Decimal:
         """
         ポジションの平均取得単価を返す
 
         Returns:
             float: ポジションをもっていない場合は np.nan が返る
         """
-        position = self._repository.position()
+        positions = self._repository.fetch_positions()
+        if len(positions) == 0:
+            return Decimal("nan")
+        elif len(positions) > 1:
+            raise UnexpectedSpecError(f"ポジションが複数ある, {positions=}")
+        position = positions[0]
         return position.entry_price

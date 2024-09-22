@@ -1,6 +1,9 @@
 from typing import Protocol
 
-from crypto_exchanges.core.domain.interfaces import IPositionGetter, IPositionRepository
+from crypto_exchanges.core.domain.repositories import (
+    IPositionGetter,
+    IPositionRepository,
+)
 
 
 class WsPositionGetter(IPositionGetter):

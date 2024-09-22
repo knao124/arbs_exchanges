@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 from crypto_exchanges.core.domain.entities import OrderBookItem
-from crypto_exchanges.core.domain.interfaces import (
+from crypto_exchanges.core.domain.repositories import (
     IExecutionRepository,
     IOrderBookRepository,
 )

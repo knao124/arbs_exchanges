@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Optional
 
 import ccxt
@@ -6,19 +7,31 @@ import pandas as pd
 from crypto_exchanges.core.domain.entities import (
     Balance,
     Execution,
+    Fee,
     OrderBook,
     OrderBookItem,
+    Position,
 )
-from crypto_exchanges.core.domain.interfaces import (
+from crypto_exchanges.core.domain.repositories import (
+    IBalanceRepository,
     IExecutionRepository,
+    IFeeRepository,
     IOrderBookRepository,
+    IPositionRepository,
 )
+from crypto_exchanges.core.exceptions import UnexpectedSpecError
 
 
-class BybitRestRepository(IOrderBookRepository, IExecutionRepository):
-    def __init__(self, ccxt_exchange: ccxt.Exchange, update_limit_sec: float = 0.5):
+class BybitRestRepository(
+    IOrderBookRepository,
+    IExecutionRepository,
+    IFeeRepository,
+    IBalanceRepository,
+    IPositionRepository,
+):
+    def __init__(self, ccxt_exchange: ccxt.Exchange, update_interval_sec: float):
         self._ccxt_exchange = ccxt_exchange
-        self._update_limit_sec = update_limit_sec  # TODO: 実装
+        self._update_interval_sec = update_interval_sec  # TODO: 実装
 
     def fetch_order_book(self, symbol: str, limit: Optional[int] = None) -> OrderBook:
         orderbook_dict = self._ccxt_exchange.fetch_order_book(
@@ -26,13 +39,27 @@ class BybitRestRepository(IOrderBookRepository, IExecutionRepository):
         )
         return _to_orderbook(orderbook_dict, symbol)
 
-    def fetch_trades(self, symbol: str, limit: Optional[int] = None) -> list[Execution]:
+    def fetch_executions(
+        self, symbol: str, limit: Optional[int] = None
+    ) -> list[Execution]:
         trades = self._ccxt_exchange.fetch_trades(symbol=symbol, limit=limit)
         return _to_executions(trades)
 
     def fetch_balance(self) -> Balance:
         resp = self._ccxt_exchange.fetch_balance()
         return _to_balance(resp)
+
+    def fetch_fee(self, symbol: str) -> Fee:
+        self._ccxt_exchange.load_markets()
+        fee_dict = self._ccxt_exchange.markets[symbol]
+        return _to_fee(fee_dict, symbol)
+
+    def fetch_positions(self, symbol: str) -> list[Position]:
+        position_dicts = self._ccxt_exchange.fetch_positions(symbols=[symbol])
+        positions = []
+        for position_dict in position_dicts:
+            positions.append(_to_position(position_dict, symbol))
+        return positions
 
 
 def _to_orderbook(orderbook_dict: dict, symbol: str) -> OrderBook:
@@ -281,3 +308,43 @@ def _safe_get(
             return default
         d = d[key]
     return d
+
+
+def _to_fee(fee_dict: dict, symbol: str) -> Fee:
+    """ccxtのfetch_feeの返り値をFeeに変換する
+
+    fee_dictの中身は以下のようになっている。
+    {
+        "maker": "0.0002",
+        "taker": "0.0004",
+    }
+
+    Args:
+        fee_dict (dict): ccxtのfetch_feeの返り値
+
+    Returns:
+        Fee: Fee
+    """
+    return Fee(
+        symbol=symbol,
+        maker=Decimal(fee_dict["maker"]),
+        taker=Decimal(fee_dict["taker"]),
+    )
+
+
+def _to_position(position_dict: dict, symbol: str) -> Position:
+    """ccxtのfetch_positionsの返り値をPositionに変換する
+
+    position_dictの中身は以下のようになっている。
+    {
+        "entryPrice": "58913.40",
+        "contracts": "0.125",
+    }
+    """
+    # TODO: 実装
+    return Position(
+        symbol=symbol,
+        side_int=1 if position_dict["side"] == "long" else -1,
+        entry_price=Decimal(position_dict["entryPrice"]),
+        size=Decimal(position_dict["contracts"]),
+    )

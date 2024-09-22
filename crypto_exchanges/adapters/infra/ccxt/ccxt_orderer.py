@@ -1,15 +1,12 @@
 from dataclasses import dataclass
 from decimal import Decimal
-from logging import Logger, getLogger
+from logging import getLogger
 from typing import Optional
 
 import ccxt
 
-from crypto_exchanges.core.domain.interfaces import IOrderer
-
-
-class ISizer:
-    def __call__(self, size: float) -> Decimal: ...
+from crypto_exchanges.adapters.interfaces import ISizer
+from crypto_exchanges.core.use_cases.interfaces import IOrderer
 
 
 @dataclass
@@ -32,7 +29,6 @@ class CcxtOrderer(IOrderer):
         symbol: str,
         post_only_str: str,
         min_lot_size: Decimal,
-        logger: Optional[Logger] = None,
     ):
         """CcxtOrdererのコンストラクタ
 
@@ -42,7 +38,6 @@ class CcxtOrderer(IOrderer):
             symbol (str): 通貨ペア
             post_only_str (str): post_onlyの文字列
             min_lot_size (Decimal): 最小注文量
-            logger (Optional[Logger], optional): logger. Defaults to None. Noneの場合はgetLogger(__class__.__name__)を使う.
         """
         self._ccxt_exchange = ccxt_exchange
         self._config = _CcxtOrdererConfig(
@@ -51,11 +46,7 @@ class CcxtOrderer(IOrderer):
             post_only_str=post_only_str,
             min_lot_size=min_lot_size,
         )
-
-        if logger is None:
-            self._logger = getLogger(__class__.__name__)
-        else:
-            self._logger = logger
+        self._logger = getLogger(__class__.__name__)
 
     def post_market_order(
         self,

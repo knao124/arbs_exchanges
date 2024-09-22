@@ -2,11 +2,12 @@ from decimal import Decimal
 
 import ccxt
 
-from crypto_exchanges.core.domain.interfaces import IPositionGetter
+from crypto_exchanges.core.domain.repositories import IPositionRepository
 from crypto_exchanges.core.exceptions import UnexpectedSpecError
+from crypto_exchanges.core.use_cases.interfaces import IPositionGetter
 
 
-class RestPositionGetter(IPositionGetter):
+class PositionGetter(IPositionGetter):
     def __init__(
         self,
         ccxt_exchange: ccxt.bybit,

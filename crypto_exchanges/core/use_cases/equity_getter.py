@@ -1,8 +1,5 @@
-from crypto_exchanges.core.domain.interfaces import (
-    IBalanceRepository,
-    IEquityGetter,
-    ITicker,
-)
+from crypto_exchanges.core.domain.repositories import IBalanceRepository
+from crypto_exchanges.core.use_cases.interfaces import IEquityGetter, ITicker
 
 
 class EquityGetter(IEquityGetter):

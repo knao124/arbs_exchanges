@@ -1,4 +1,4 @@
-from crypto_exchanges.core.domain.interfaces import IBalanceGetter, IBalanceRepository
+from crypto_exchanges.core.domain.repositories import IBalanceGetter, IBalanceRepository
 
 
 class BalanceGetter(IBalanceGetter):
