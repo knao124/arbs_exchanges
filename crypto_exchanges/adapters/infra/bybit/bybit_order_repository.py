@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from decimal import Decimal
 from logging import getLogger
 
@@ -7,7 +6,8 @@ import numpy as np
 
 from crypto_exchanges.core.domain.entities import Order, OrderType, Symbol
 from crypto_exchanges.core.domain.repositories import IOrderRepository
-from crypto_exchanges.core.use_cases.interfaces import IOrderLinkIdGenerator
+
+from .bybit_order_link_id_generator import IOrderLinkIdGenerator
 
 
 class BybitOrderRepository(IOrderRepository):
