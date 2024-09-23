@@ -1,34 +1,55 @@
-import math
+from dataclasses import dataclass
+from decimal import Decimal
+from logging import getLogger
 
 import ccxt
+import numpy as np
 
-from crypto_exchanges.core.use_cases.interfaces import IOrderer, IOrderLinkIdGenerator
-from crypto_exchanges.core.use_cases.order_link_id_generator import (
-    DefaultOrderLinkIdGenerator,
-)
+from crypto_exchanges.core.domain.entities import Order, OrderType, Symbol
+from crypto_exchanges.core.domain.repositories import IOrderRepository
+from crypto_exchanges.core.use_cases.interfaces import IOrderLinkIdGenerator
 
 
-class BybitOrderer(IOrderer):
+class BybitOrderRepository(IOrderRepository):
     """
-    - https://github.com/ccxt/ccxt/blob/master/python/ccxt/bitflyer.py
     - https://docs.ccxt.com/en/latest/manual.html#order-structure
     """
 
     def __init__(
         self,
-        ccxt_orderer: IOrderer,
-        order_link_id_generator: IOrderLinkIdGenerator = DefaultOrderLinkIdGenerator(),
+        ccxt_exchange: ccxt.bybit,
+        order_link_id_generator: IOrderLinkIdGenerator,
     ):
-        self._ccxt_orderer = ccxt_orderer
+        """CcxtOrdererのコンストラクタ
+
+        Args:
+            ccxt_exchange (ccxt.Exchange): ccxtのexchange
+            order_link_id_generator (IOrderLinkIdGenerator): order_link_idを生成するインターフェース
+        """
+        assert isinstance(ccxt_exchange, ccxt.bybit)
+        self._ccxt_exchange = ccxt_exchange
         self._order_link_id_generator = order_link_id_generator
 
-    def post_market_order(self, side_int: int, size: float) -> dict:
-        # User customized order ID. A max of 36 characters. A user cannot reuse an orderLinkId, with some exceptions.
-        # Combinations of numbers, letters (upper and lower cases), dashes, and underscores are supported.
-        # Not required for futures, but required for options.
-        """
-        返却されるdictの例
+        self._logger = getLogger(__class__.__name__)
 
+    def _create_order(
+        self,
+        symbol: Symbol,
+        order_type: OrderType,
+        size_with_sign: Decimal,
+        price: Decimal,
+        post_only: bool,
+    ) -> Order:
+        """注文を作成する
+
+        Args:
+            symbol (Symbol): 通貨ペア
+            order_type (OrderType): 注文タイプ
+            size_with_sign (Decimal): 注文量. 正負の数で指定する.
+            price (Decimal): 注文価格
+            post_only (bool): post_onlyかどうか
+
+        ccxtから返却されるdictの例. これをOrderに変換して返している
         {
             "info": {
                 "orderId": "1779761587192948992",
@@ -61,64 +82,192 @@ class BybitOrderer(IOrderer):
             "trades": [],
             "fees": [],
         }
+
+        Returns:
+            Order: 注文
         """
-        params = {
-            "order_link_id": self._order_link_id_generator.generate(),
-        }
-        return self._ccxt_orderer.post_market_order(
-            side_int=side_int,
-            size=size,
+        order_link_id = self._order_link_id_generator.generate()
+        params = {"position_idx": 0, "order_link_id": order_link_id}
+        if post_only:
+            params["timeInForce"] = "PO"
+
+        side = _to_side_str(size_with_sign)
+        size = abs(size_with_sign)
+
+        res_dict = self._ccxt_exchange.create_order(
+            symbol=symbol,
+            type=order_type,
+            side=side,
+            amount=size,
+            price=price,
             params=params,
         )
+        if order_type == OrderType.MARKET:
+            # bybitではmarket orderの際、priceはresponseに乗っていない
+            res_price = Decimal("nan")
+            res_size_with_sign = size_with_sign
+        elif order_type == OrderType.LIMIT:
+            res_price = res_dict["price"]
+            res_size_with_sign = Decimal(res_dict["amount"]) * np.sign(size_with_sign)
 
-    def post_limit_order(
+        order = Order(
+            order_type=order_type,
+            order_id=res_dict["id"],
+            symbol=symbol,
+            size_with_sign=res_size_with_sign,
+            price=res_price,
+        )
+
+        return order
+
+    def create_market_order(
         self,
-        side_int: int,
-        size: float,
-        price: float,
-        post_only: bool = False,
-        params: dict = {},
-    ) -> dict:
-        params["order_link_id"] = self._order_link_id_generator.generate()
-        return self._ccxt_orderer.post_limit_order(
-            side_int=side_int,
-            size=size,
+        symbol: Symbol,
+        size_with_sign: Decimal,
+    ) -> Order:
+        """成行注文を出す
+
+        Args:
+            symbol (Symbol): 通貨ペア
+            size_with_sign (Decimal): 注文量. 正負の数で指定する.
+
+        Returns:
+            Order: 注文
+        """
+        return self._create_order(
+            symbol=symbol,
+            order_type=OrderType.MARKET,
+            size_with_sign=size_with_sign,
+            price=Decimal("nan"),
+            post_only=False,
+        )
+
+    def create_limit_order(
+        self,
+        symbol: Symbol,
+        size_with_sign: Decimal,
+        price: Decimal,
+        post_only: bool,
+    ) -> Order:
+        """指値注文を出す
+
+        Args:
+            symbol (Symbol): 通貨ペア
+            size_with_sign (Decimal): 注文量. 正負の数で指定する.
+            price (Decimal): 注文価格. 指定しない場合は nan を指定する.
+            post_only (bool): post_onlyかどうか. 成行注文の場合は常に False
+
+        Returns:
+            Order: 注文
+        """
+        return self._create_order(
+            symbol=symbol,
+            order_type=OrderType.LIMIT,
+            size_with_sign=size_with_sign,
             price=price,
             post_only=post_only,
-            params=params,
         )
 
-    def cancel_limit_order(self, order_id: str) -> dict:
-        return self._ccxt_orderer.cancel_limit_order(order_id)
+    def cancel_limit_order(self, symbol: Symbol, order_id: str) -> Order:
+        """注文をキャンセルする
+
+        Args:
+            symbol (Symbol): 通貨ペア
+            order_id (str): 注文ID
+
+        Returns:
+            Order: 注文
+        """
+        res_dict = self._ccxt_exchange.cancel_order(
+            id=order_id,
+            symbol=symbol,
+        )
+        # TODO: Orderに治す
+        return Order(
+            order_type=OrderType.LIMIT,
+            order_id=res_dict["id"],
+            symbol=symbol,
+            size_with_sign=Decimal(res_dict["amount"]),
+            price=Decimal(res_dict["price"]),
+        )
 
     def edit_limit_order(
-        self, order_id: str, side_int: int, size: float, price: float, params: dict = {}
-    ) -> dict:
-        return self._ccxt_orderer.edit_limit_order(
-            order_id=order_id,
-            side_int=side_int,
-            size=size,
+        self,
+        symbol: Symbol,
+        order_id: str,
+        size_with_sign: Decimal,
+        price: Decimal,
+    ) -> Order:
+        """注文を編集する
+
+        Args:
+            symbol (Symbol): 通貨ペア
+            order_id (str): 注文ID
+            size_with_sign (Decimal): 注文量. 正負の数で指定する.
+            price (Decimal): 注文価格
+
+        Returns:
+            Order: 注文
+        """
+        side = _to_side_str(size_with_sign)
+        size = abs(size_with_sign)
+        return self._ccxt_exchange.edit_order(
+            id=order_id,
+            symbol=symbol,
+            type=OrderType.LIMIT,
+            side=side,
+            amount=size,
             price=price,
-            params=params,
         )
 
-    def fetch_latest_orders(self) -> list:
-        return self._ccxt_orderer.fetch_latest_orders()
+    def get_latest_orders(self, symbol: Symbol) -> list[Order]:
+        """注文を取得する
 
-    def fetch_open_orders(self) -> list:
-        return self._ccxt_orderer.fetch_open_orders()
+        Returns:
+            list[Order]: 注文のリスト
+        """
+        orders = self._ccxt_exchange.fetch_orders(symbol=symbol)
+        return [
+            Order(
+                order_type=OrderType.LIMIT,
+                order_id=order["id"],
+                symbol=symbol,
+                size_with_sign=Decimal(order["amount"]),
+                price=Decimal(order["price"]),
+            )
+            for order in orders
+        ]
 
-    def cancel_all_orders(self) -> None:
-        return self._ccxt_orderer.cancel_all_orders()
+    def get_open_orders(self, symbol: Symbol) -> list[Order]:
+        """未決済の注文を取得する
+
+        Returns:
+            list[Order]: 未決済の注文のリスト
+        """
+        orders = self._ccxt_exchange.fetch_open_orders(symbol=symbol)
+        return [
+            Order(
+                order_type=OrderType.LIMIT,
+                order_id=order["id"],
+                symbol=symbol,
+                size_with_sign=Decimal(order["amount"]),
+                price=Decimal(order["price"]),
+            )
+            for order in orders
+        ]
 
 
-def _get_min_lot_size(ccxt_exchange: ccxt.bybit, symbol: str, settlement_symbol):
+def _to_side_str(side_int: int):
+    """売買方向をccxtのsideの文字列に変換する
+
+    Args:
+        side_int (int): 売買方向
+
+    Returns:
+        str: ccxtのsideの文字列
     """
-    BTCUSDT: https://testnet.bybit.com/data/basic/linear/contract-detail?symbol=BTCUSDT
-    ETHUSDT: https://testnet.bybit.com/data/basic/linear/contract-detail?symbol=ETHUSDT
-    """
-    if "BTCUSDT" in symbol:
-        return 0.0010
-    elif "ETHUSDT" in symbol:
-        return 0.010
-    raise ValueError(f"今は対応していないけどいずれ対応しないといけない: {symbol=}")
+    if side_int > 0:
+        return "buy"
+    if side_int < 0:
+        return "sell"
+    raise ValueError(f"side_int must be 1 or -1, but {side_int=}")

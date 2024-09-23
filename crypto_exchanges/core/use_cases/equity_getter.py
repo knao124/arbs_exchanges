@@ -1,12 +1,12 @@
 from crypto_exchanges.core.domain.repositories import IBalanceRepository
-from crypto_exchanges.core.use_cases.interfaces import IEquityGetter, ITicker
+from crypto_exchanges.core.use_cases import Ticker
 
 
-class EquityGetter(IEquityGetter):
+class EquityGetter:
     def __init__(
         self,
         repository: IBalanceRepository,
-        usdjpy_ticker: ITicker,
+        usdjpy_ticker: Ticker,
     ):
         self._repository = repository
         self._usdjpy_ticker = usdjpy_ticker

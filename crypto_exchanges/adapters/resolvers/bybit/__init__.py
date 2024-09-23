@@ -4,23 +4,23 @@ from typing import Literal
 
 import ccxt
 
-from crypto_exchanges.adapters.infra.bybit.bybit_orderer import BybitOrderer
+from crypto_exchanges.adapters.infra.bybit.bybit_order_link_id_generator import (
+    BybitDefaultOrderLinkIdGenerator,
+)
+from crypto_exchanges.adapters.infra.bybit.bybit_orderer import BybitOrderRepository
 from crypto_exchanges.adapters.infra.bybit.bybit_rest_repository import (
     BybitRestRepository,
 )
 from crypto_exchanges.adapters.infra.bybit.bybit_sizer import init_sizer
-from crypto_exchanges.adapters.infra.ccxt.ccxt_orderer import CcxtOrderer
 from crypto_exchanges.core.use_cases import (
     BalanceGetter,
     EffectiveTicker,
     EquityGetter,
     FeeGetter,
+    Orderer,
     PositionGetter,
     Ticker,
 )
-
-# Ordererにできないか考える. 多分できる. IOrderRepositoryとしてInterfaceを作って共通化を図る
-from crypto_exchanges.core.use_cases.interfaces import IOrderer
 
 
 def init_ccxt_bybit(
@@ -63,7 +63,7 @@ class Exchange:
     fee_getter: FeeGetter
     position_getter: PositionGetter
     ticker: Ticker
-    orderer: IOrderer
+    orderer: Orderer
 
 
 def init_bybit_exchange(symbol: str, mode: Literal["testnet", "real"]) -> Exchange:
@@ -102,14 +102,15 @@ def init_bybit_exchange(symbol: str, mode: Literal["testnet", "real"]) -> Exchan
     position_getter = PositionGetter(repository=repo, symbol=symbol)
 
     # orderer
-    ccxt_orderer = CcxtOrderer(
+    order_repo = BybitOrderRepository(
         ccxt_exchange=bybit_ccxt,
+        order_link_id_generator=BybitDefaultOrderLinkIdGenerator(),
+    )
+    orderer = Orderer(
+        repository=order_repo,
         sizer=init_sizer(symbol=symbol),
         symbol=symbol,
-        post_only_str="post_only",  # TODO
-        min_lot_size=0.001,  # TODO
     )
-    orderer = BybitOrderer(ccxt_orderer=ccxt_orderer)
 
     return Exchange(
         balance_getter=balance_getter,

@@ -1,7 +1,7 @@
-from crypto_exchanges.core.domain.repositories import IBalanceGetter, IBalanceRepository
+from crypto_exchanges.core.domain.repositories import IBalanceRepository
 
 
-class BalanceGetter(IBalanceGetter):
+class BalanceGetter:
     def __init__(
         self,
         repository: IBalanceRepository,

@@ -1,17 +1,27 @@
+from abc import ABC, abstractmethod
 from logging import getLogger
 from uuid import uuid4
 
-from crypto_exchanges.core.use_cases.interfaces import IOrderLinkIdGenerator, ITicker
+from crypto_exchanges.core.use_cases import Ticker
 
 
-class DefaultOrderLinkIdGenerator(IOrderLinkIdGenerator):
+class IOrderLinkIdGenerator(ABC):
+    @abstractmethod
+    def generate(self) -> str: ...
+
+
+class BybitDefaultOrderLinkIdGenerator(IOrderLinkIdGenerator):
     def generate(self) -> str:
         return str(uuid4())
 
 
-class USDJPYOrderLinkIdGenerator(IOrderLinkIdGenerator):
-    def __init__(self, usdjpy_ticker: ITicker):
+class BybitUSDJPYOrderLinkIdGenerator(IOrderLinkIdGenerator):
+    def __init__(
+        self,
+        usdjpy_ticker: Ticker,
+    ):
         self._usdjpy_ticker = usdjpy_ticker
+
         self._logger = getLogger(__class__.__name__)
 
     # 最新のUSDJPYのレート情報が入ったorder_link_idを生成する
@@ -39,5 +49,5 @@ class USDJPYOrderLinkIdGenerator(IOrderLinkIdGenerator):
         # 最大36文字
         return replaced[:36]
 
-    def _generate_uuid4_str(self):
+    def _generate_uuid4_str(self) -> str:
         return str(uuid4())
