@@ -4,8 +4,9 @@ from decimal import Decimal
 from crypto_exchanges.core.domain.repositories import (
     IExecutionRepository,
     IOrderBookRepository,
-    ITicker,
 )
+
+from .interfaces import ITicker
 
 
 @dataclass

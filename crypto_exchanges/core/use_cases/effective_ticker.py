@@ -7,6 +7,8 @@ from crypto_exchanges.core.domain.repositories import (
     IOrderBookRepository,
 )
 
+from .interfaces import ITicker
+
 
 @dataclass
 class _WsEffectiveTickerConfig:
@@ -14,7 +16,7 @@ class _WsEffectiveTickerConfig:
     target_volume: float
 
 
-class EffectiveTicker:
+class EffectiveTicker(ITicker):
     def __init__(
         self,
         orderbook_repository: IOrderBookRepository,
@@ -31,7 +33,7 @@ class EffectiveTicker:
 
     def _get_bid_ask(self) -> tuple[float, float]:
         target_volume = self._config.target_volume
-        orderbook = self._orderbook_repository.fetch_order_book()
+        orderbook = self._orderbook_repository.fetch_order_book(self._config.symbol)
 
         bid_price = get_effective_price(orderbook.bid, target_volume)
         ask_price = get_effective_price(orderbook.ask, target_volume)
