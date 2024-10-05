@@ -10,10 +10,13 @@ from crypto_exchanges.core.domain.entities import (
 from crypto_exchanges.core.domain.repositories import (
     IExecutionRepository,
     IOrderBookRepository,
+    IPositionRepository,
 )
 
 
-class BybitWsRepository(IOrderBookRepository, IExecutionRepository):
+class BybitWsRepository(
+    IOrderBookRepository, IExecutionRepository, IPositionRepository
+):
     """BybitDataStoreのデータを型安全に取得する"""
 
     def __init__(self, store: pybotters.BybitDataStore):
@@ -27,9 +30,9 @@ class BybitWsRepository(IOrderBookRepository, IExecutionRepository):
         trade_dicts = self._store.trade.find()
         return _to_executions(trade_dicts)
 
-    def fetch_position(self) -> Position:
+    def fetch_positions(self) -> list[Position]:
         position_dict = self._store.position.find()
-        return _to_position(position_dict)
+        return [_to_position(position_dict)]
 
 
 def _to_orderbook(orderbook_dict: dict) -> OrderBook:

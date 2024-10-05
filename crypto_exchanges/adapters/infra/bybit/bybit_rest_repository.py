@@ -21,7 +21,6 @@ from crypto_exchanges.core.domain.repositories import (
     IOrderBookRepository,
     IPositionRepository,
 )
-from crypto_exchanges.core.exceptions import UnexpectedSpecError
 
 
 class BybitRestRepository(
@@ -51,15 +50,6 @@ class BybitRestRepository(
         trades = self._ccxt_exchange.fetch_trades(symbol=symbol.value, limit=limit)
         return _to_executions(trades)
 
-    def fetch_balance(self) -> Balance:
-        resp = self._ccxt_exchange.fetch_balance()
-        return _to_balance(resp)
-
-    def fetch_fee(self, symbol: Symbol) -> Fee:
-        self._ccxt_exchange.load_markets()
-        fee_dict = self._ccxt_exchange.markets[symbol.value]
-        return _to_fee(fee_dict, symbol)
-
     def fetch_positions(self, symbol: Symbol) -> list[Position]:
         position_dicts = self._ccxt_exchange.fetch_positions(
             # see: https://bybit-exchange.github.io/docs/v5/position
@@ -71,6 +61,15 @@ class BybitRestRepository(
             self._logger.info(position_dict)
             positions.append(_to_position(position_dict, symbol))
         return positions
+
+    def fetch_balance(self) -> Balance:
+        resp = self._ccxt_exchange.fetch_balance()
+        return _to_balance(resp)
+
+    def fetch_fee(self, symbol: Symbol) -> Fee:
+        self._ccxt_exchange.load_markets()
+        fee_dict = self._ccxt_exchange.markets[symbol.value]
+        return _to_fee(fee_dict, symbol)
 
 
 def _to_orderbook(orderbook_dict: dict, symbol: str) -> OrderBook:
