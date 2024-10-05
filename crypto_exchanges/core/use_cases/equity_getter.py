@@ -1,5 +1,6 @@
 from crypto_exchanges.core.domain.repositories import IBalanceRepository
-from crypto_exchanges.core.use_cases import Ticker
+
+from .ticker import Ticker
 
 
 class EquityGetter:

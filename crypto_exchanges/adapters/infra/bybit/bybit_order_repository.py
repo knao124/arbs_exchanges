@@ -1,5 +1,6 @@
 from decimal import Decimal
 from logging import getLogger
+from typing import Optional
 
 import ccxt
 import numpy as np
@@ -19,37 +20,45 @@ class BybitOrderRepository(IOrderRepository):
         self,
         ccxt_exchange: ccxt.bybit,
         order_link_id_generator: IOrderLinkIdGenerator,
+        symbol: Symbol,
     ):
         """CcxtOrdererのコンストラクタ
 
         Args:
             ccxt_exchange (ccxt.Exchange): ccxtのexchange
             order_link_id_generator (IOrderLinkIdGenerator): order_link_idを生成するインターフェース
+            symbol (Symbol): 通貨ペア. 通貨ペアの内容によって、requestのparams値が変わるので、依存関係として受け取る
         """
         assert isinstance(ccxt_exchange, ccxt.bybit)
         self._ccxt_exchange = ccxt_exchange
         self._order_link_id_generator = order_link_id_generator
+        self._symbol = symbol
 
         self._logger = getLogger(__class__.__name__)
 
+    @property
+    def _category(self) -> str:
+        if self._symbol == Symbol.BYBIT_LINEAR_BTCUSDT:
+            return "linear"
+        raise ValueError(f"Invalid symbol: {self._symbol}")
+
     def _create_order(
         self,
-        symbol: Symbol,
         order_type: OrderType,
         size_with_sign: Decimal,
-        price: Decimal,
-        post_only: bool,
+        price: Decimal = Decimal("nan"),
+        post_only: bool = False,
     ) -> Order:
         """注文を作成する
 
         Args:
-            symbol (Symbol): 通貨ペア
             order_type (OrderType): 注文タイプ
             size_with_sign (Decimal): 注文量. 正負の数で指定する.
             price (Decimal): 注文価格
-            post_only (bool): post_onlyかどうか
+            post_only (bool): post_onlyかどうか. trueの場合、成り行きになる場合は注文が自動的に取り消される
 
-        ccxtから返却されるdictの例. これをOrderに変換して返している
+        ccxtから返却されるdictの例. bybitからは orderId しか返ってこない. これが返ってきた場合、無事に注文は成立しているので
+        エラーは出さずに返すことにする
         {
             "info": {
                 "orderId": "1779761587192948992",
@@ -86,43 +95,49 @@ class BybitOrderRepository(IOrderRepository):
         Returns:
             Order: 注文
         """
+        assert size_with_sign != 0
+
         order_link_id = self._order_link_id_generator.generate()
-        params = {"position_idx": 0, "order_link_id": order_link_id}
+        params = {
+            "position_idx": 0,
+            "order_link_id": order_link_id,
+            "category": self._category,
+        }
         if post_only:
             params["timeInForce"] = "PO"
 
         side = _to_side_str(size_with_sign)
         size = abs(size_with_sign)
+        if price.is_nan():
+            price = None
 
+        self._logger.info(
+            f"create_order(symbol={self._symbol.value}, order_type={order_type.value}, side={side}, amount={size}, price={price})"
+        )
         res_dict = self._ccxt_exchange.create_order(
-            symbol=symbol,
-            type=order_type,
+            symbol=self._symbol.value,
+            type=order_type.value,
             side=side,
             amount=size,
             price=price,
             params=params,
         )
         if order_type == OrderType.MARKET:
-            # bybitではmarket orderの際、priceはresponseに乗っていない
-            res_price = Decimal("nan")
-            res_size_with_sign = size_with_sign
-        elif order_type == OrderType.LIMIT:
-            res_price = res_dict["price"]
-            res_size_with_sign = Decimal(res_dict["amount"]) * np.sign(size_with_sign)
+            # market orderの場合、priceは nan で返す
+            price = Decimal("nan")
 
         order = Order(
             order_type=order_type,
             order_id=res_dict["id"],
-            symbol=symbol,
-            size_with_sign=res_size_with_sign,
-            price=res_price,
+            symbol=self._symbol,
+            size_with_sign=size_with_sign,
+            price=price,
         )
 
         return order
 
     def create_market_order(
         self,
-        symbol: Symbol,
         size_with_sign: Decimal,
     ) -> Order:
         """成行注文を出す
@@ -135,7 +150,6 @@ class BybitOrderRepository(IOrderRepository):
             Order: 注文
         """
         return self._create_order(
-            symbol=symbol,
             order_type=OrderType.MARKET,
             size_with_sign=size_with_sign,
             price=Decimal("nan"),
@@ -144,7 +158,6 @@ class BybitOrderRepository(IOrderRepository):
 
     def create_limit_order(
         self,
-        symbol: Symbol,
         size_with_sign: Decimal,
         price: Decimal,
         post_only: bool,
@@ -152,7 +165,6 @@ class BybitOrderRepository(IOrderRepository):
         """指値注文を出す
 
         Args:
-            symbol (Symbol): 通貨ペア
             size_with_sign (Decimal): 注文量. 正負の数で指定する.
             price (Decimal): 注文価格. 指定しない場合は nan を指定する.
             post_only (bool): post_onlyかどうか. 成行注文の場合は常に False
@@ -161,14 +173,13 @@ class BybitOrderRepository(IOrderRepository):
             Order: 注文
         """
         return self._create_order(
-            symbol=symbol,
             order_type=OrderType.LIMIT,
             size_with_sign=size_with_sign,
             price=price,
             post_only=post_only,
         )
 
-    def cancel_limit_order(self, symbol: Symbol, order_id: str) -> Order:
+    def remove_order(self, order_id: str) -> Order:
         """注文をキャンセルする
 
         Args:
@@ -180,23 +191,29 @@ class BybitOrderRepository(IOrderRepository):
         """
         res_dict = self._ccxt_exchange.cancel_order(
             id=order_id,
-            symbol=symbol,
+            symbol=self._symbol.value,
         )
-        # TODO: Orderに治す
         return Order(
             order_type=OrderType.LIMIT,
             order_id=res_dict["id"],
-            symbol=symbol,
-            size_with_sign=Decimal(res_dict["amount"]),
-            price=Decimal(res_dict["price"]),
+            symbol=self._symbol,
+            # データがないのでnanで返す
+            size_with_sign=Decimal("nan"),
+            price=Decimal("nan"),
         )
 
-    def edit_limit_order(
+    def remove_all_orders(self):
+        """全ての注文をキャンセルする"""
+        self._ccxt_exchange.cancel_all_orders(
+            symbol=self._symbol.value,
+        )
+        return True
+
+    def update_order(
         self,
-        symbol: Symbol,
         order_id: str,
-        size_with_sign: Decimal,
-        price: Decimal,
+        size_with_sign: Optional[Decimal] = None,
+        price: Optional[Decimal] = None,
     ) -> Order:
         """注文を編集する
 
@@ -204,52 +221,78 @@ class BybitOrderRepository(IOrderRepository):
             symbol (Symbol): 通貨ペア
             order_id (str): 注文ID
             size_with_sign (Decimal): 注文量. 正負の数で指定する.
-            price (Decimal): 注文価格
+            price (Decimal): 注文価格. 変えない場合はnanかNoneで指定する
 
         Returns:
             Order: 注文
         """
         side = _to_side_str(size_with_sign)
         size = abs(size_with_sign)
-        return self._ccxt_exchange.edit_order(
+        if price.is_nan():
+            price = None
+
+        res = self._ccxt_exchange.edit_order(
             id=order_id,
-            symbol=symbol,
-            type=OrderType.LIMIT,
+            symbol=self._symbol.value,
+            type=OrderType.LIMIT.value,
             side=side,
             amount=size,
             price=price,
+            params={"category": self._category},
         )
 
-    def get_latest_orders(self, symbol: Symbol) -> list[Order]:
+        return Order(
+            order_type=OrderType.LIMIT,
+            order_id=res["id"],
+            symbol=self._symbol,
+            size_with_sign=size_with_sign,
+            price=price if price is not None else Decimal("nan"),
+        )
+
+    def get_latest_orders(self) -> list[Order]:
         """注文を取得する
 
         Returns:
             list[Order]: 注文のリスト
         """
-        orders = self._ccxt_exchange.fetch_orders(symbol=symbol)
+        orders = self._ccxt_exchange.fetch_closed_orders(
+            symbol=self._symbol.value,
+            params={"category": self._category},
+        )
         return [
             Order(
                 order_type=OrderType.LIMIT,
                 order_id=order["id"],
-                symbol=symbol,
-                size_with_sign=Decimal(order["amount"]),
-                price=Decimal(order["price"]),
+                symbol=self._symbol,
+                size_with_sign=(
+                    Decimal(order["amount"])
+                    if order["amount"] is not None
+                    else Decimal("nan")
+                ),
+                price=(
+                    Decimal(order["price"])
+                    if order["price"] is not None
+                    else Decimal("nan")
+                ),
             )
             for order in orders
         ]
 
-    def get_open_orders(self, symbol: Symbol) -> list[Order]:
+    def get_open_orders(self) -> list[Order]:
         """未決済の注文を取得する
 
         Returns:
             list[Order]: 未決済の注文のリスト
         """
-        orders = self._ccxt_exchange.fetch_open_orders(symbol=symbol)
+        orders = self._ccxt_exchange.fetch_open_orders(
+            symbol=self._symbol.value,
+            params={"category": self._category},
+        )
         return [
             Order(
                 order_type=OrderType.LIMIT,
                 order_id=order["id"],
-                symbol=symbol,
+                symbol=self._symbol,
                 size_with_sign=Decimal(order["amount"]),
                 price=Decimal(order["price"]),
             )

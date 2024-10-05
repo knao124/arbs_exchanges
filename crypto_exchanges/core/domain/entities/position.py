@@ -5,10 +5,9 @@ from decimal import Decimal
 @dataclass
 class Position:
     symbol: str
-    side_int: int
     entry_price: Decimal
-    size: Decimal
+    size_with_sign: Decimal
 
     @property
     def volume_abs(self) -> Decimal:
-        return abs(self.size)
+        return abs(self.size_with_sign)

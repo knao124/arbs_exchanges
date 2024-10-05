@@ -42,6 +42,13 @@ class IOrderRepository(ABC):
         pass
 
     @abstractmethod
+    def remove_all_orders(
+        self,
+        symbol: Symbol,
+    ) -> bool:
+        pass
+
+    @abstractmethod
     def get_open_orders(
         self,
         symbol: Symbol,

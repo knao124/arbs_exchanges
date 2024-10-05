@@ -1,4 +1,5 @@
 from decimal import Decimal
+from logging import getLogger
 from typing import Optional
 
 import ccxt
@@ -11,6 +12,7 @@ from crypto_exchanges.core.domain.entities import (
     OrderBook,
     OrderBookItem,
     Position,
+    Symbol,
 )
 from crypto_exchanges.core.domain.repositories import (
     IBalanceRepository,
@@ -33,31 +35,40 @@ class BybitRestRepository(
         self._ccxt_exchange = ccxt_exchange
         self._update_interval_sec = update_interval_sec  # TODO: 実装
 
-    def fetch_order_book(self, symbol: str, limit: Optional[int] = None) -> OrderBook:
+        self._logger = getLogger(__name__)
+
+    def fetch_order_book(
+        self, symbol: Symbol, limit: Optional[int] = None
+    ) -> OrderBook:
         orderbook_dict = self._ccxt_exchange.fetch_order_book(
-            symbol=symbol, limit=limit
+            symbol=symbol.value, limit=limit
         )
         return _to_orderbook(orderbook_dict, symbol)
 
     def fetch_executions(
-        self, symbol: str, limit: Optional[int] = None
+        self, symbol: Symbol, limit: Optional[int] = None
     ) -> list[Execution]:
-        trades = self._ccxt_exchange.fetch_trades(symbol=symbol, limit=limit)
+        trades = self._ccxt_exchange.fetch_trades(symbol=symbol.value, limit=limit)
         return _to_executions(trades)
 
     def fetch_balance(self) -> Balance:
         resp = self._ccxt_exchange.fetch_balance()
         return _to_balance(resp)
 
-    def fetch_fee(self, symbol: str) -> Fee:
+    def fetch_fee(self, symbol: Symbol) -> Fee:
         self._ccxt_exchange.load_markets()
-        fee_dict = self._ccxt_exchange.markets[symbol]
+        fee_dict = self._ccxt_exchange.markets[symbol.value]
         return _to_fee(fee_dict, symbol)
 
-    def fetch_positions(self, symbol: str) -> list[Position]:
-        position_dicts = self._ccxt_exchange.fetch_positions(symbols=[symbol])
+    def fetch_positions(self, symbol: Symbol) -> list[Position]:
+        position_dicts = self._ccxt_exchange.fetch_positions(
+            # see: https://bybit-exchange.github.io/docs/v5/position
+            symbols=[symbol.value],
+            params={"category": "linear"},
+        )
         positions = []
         for position_dict in position_dicts:
+            self._logger.info(position_dict)
             positions.append(_to_position(position_dict, symbol))
         return positions
 
@@ -327,8 +338,8 @@ def _to_fee(fee_dict: dict, symbol: str) -> Fee:
     """
     return Fee(
         symbol=symbol,
-        maker=Decimal(fee_dict["maker"]),
-        taker=Decimal(fee_dict["taker"]),
+        maker=Decimal(str(fee_dict["maker"])),
+        taker=Decimal(str(fee_dict["taker"])),
     )
 
 
@@ -337,14 +348,78 @@ def _to_position(position_dict: dict, symbol: str) -> Position:
 
     position_dictの中身は以下のようになっている。
     {
-        "entryPrice": "58913.40",
-        "contracts": "0.125",
+        "info": {
+            "symbol": "BTCUSDT",
+            "leverage": "10",
+            "autoAddMargin": "0",
+            "avgPrice": "61748.39486486",
+            "liqPrice": "69304.50300242",
+            "riskLimitValue": "2000000",
+            "takeProfit": "",
+            "positionValue": "22846.9061",
+            "isReduceOnly": False,
+            "tpslMode": "Full",
+            "riskId": "1",
+            "trailingStop": "0",
+            "unrealisedPnl": "-20.6109",
+            "markPrice": "61804.1",
+            "adlRankIndicator": "5",
+            "cumRealisedPnl": "-103.06852395",
+            "positionMM": "128.0569087",
+            "createdTime": "1727652674337",
+            "positionIdx": "0",
+            "positionIM": "2298.5129882",
+            "seq": "9367100140",
+            "updatedTime": "1728099583129",
+            "side": "Sell",
+            "bustPrice": "",
+            "positionBalance": "0",
+            "leverageSysUpdatedTime": "",
+            "curRealisedPnl": "-12.56579837",
+            "size": "0.37",
+            "positionStatus": "Normal",
+            "mmrSysUpdatedTime": "",
+            "stopLoss": "",
+            "tradeMode": "0",
+            "sessionAvgPrice": "",
+            "nextPageCursor": "BTCUSDT%2C1728099583129%2C0",
+        },
+        "id": None,
+        "symbol": "BTC/USDT:USDT",
+        "timestamp": 1727652674337,
+        "datetime": "2024-09-29T23:31:14.337Z",
+        "lastUpdateTimestamp": 1728099583129,
+        "initialMargin": 2284.69060999982,
+        "initialMarginPercentage": 0.09999999999999212,
+        "maintenanceMargin": None,
+        "maintenanceMarginPercentage": None,
+        "entryPrice": 61748.39486486,
+        "notional": 22846.9061,
+        "leverage": 10.0,
+        "unrealizedPnl": -20.6109,
+        "realizedPnl": None,
+        "contracts": 0.37,
+        "contractSize": 1.0,
+        "marginRatio": None,
+        "liquidationPrice": 69304.50300242,
+        "markPrice": 61804.1,
+        "lastPrice": None,
+        "collateral": 0.0,
+        "marginMode": None,
+        "side": "short",
+        "percentage": None,
+        "stopLossPrice": None,
+        "takeProfitPrice": None,
     }
     """
-    # TODO: 実装
+    side_int = 1 if position_dict["side"] == "long" else -1
+    size_abs = Decimal(str(position_dict["contracts"]))
+    if size_abs == 0:
+        entry_price = Decimal("nan")
+    else:
+        entry_price = Decimal(position_dict["entryPrice"])
     return Position(
         symbol=symbol,
-        side_int=1 if position_dict["side"] == "long" else -1,
-        entry_price=Decimal(position_dict["entryPrice"]),
-        size=Decimal(position_dict["contracts"]),
+        entry_price=entry_price,
+        size_with_sign=size_abs * side_int,
     )
