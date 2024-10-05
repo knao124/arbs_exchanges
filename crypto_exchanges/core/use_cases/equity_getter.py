@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from crypto_exchanges.core.domain.repositories import IBalanceRepository
 
 from .ticker import Ticker
@@ -12,16 +14,17 @@ class EquityGetter:
         self._repository = repository
         self._usdjpy_ticker = usdjpy_ticker
 
-    def total_in_jpy(self) -> float:
+    def total_in_jpy(self) -> Decimal:
         usd_jpy = self._usdjpy_ticker.last_price()
-        return self.equity_usd() * usd_jpy
+        return self.equity_usd() * usd_jpy + self.equity_jpy()
 
-    def equity_jpy(self):
-        """
-        海外の取引所にJPYは預けない運用のため、JPYのequityは0
-        """
-        return 0.0
-
-    def equity_usd(self):
+    def equity_jpy(self) -> Decimal:
         balance = self._repository.fetch_balance()
-        return float(balance["info"]["result"]["USDT"]["equity"])
+        return balance.balance_in_jpy
+
+    def equity_usd(self) -> Decimal:
+        balance = self._repository.fetch_balance()
+        # usd usdt usdc の合算
+        return (
+            balance.balance_in_usd + balance.balance_in_usdt + balance.balance_in_usdc
+        )
