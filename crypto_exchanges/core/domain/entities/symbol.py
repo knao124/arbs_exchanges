@@ -15,7 +15,7 @@ class Symbol(Enum):
 
     @classmethod
     def from_exchange_symbol(cls, exchange_symbol: str) -> "Symbol":
-        if exchange_symbol == "BTC/USDT":
+        if exchange_symbol == "BTCUSDT":
             return Symbol.BYBIT_LINEAR_BTCUSDT
         elif exchange_symbol == "FX_BTC_JPY":
             return Symbol.BITFLYER_CFD_BTCJPY
@@ -24,7 +24,7 @@ class Symbol(Enum):
 
     def to_exchange_symbol(self) -> str:
         if self == Symbol.BYBIT_LINEAR_BTCUSDT:
-            return "BTC/USDT"
+            return "BTCUSDT"
         elif self == Symbol.BITFLYER_CFD_BTCJPY:
             return "FX_BTC_JPY"
         else:

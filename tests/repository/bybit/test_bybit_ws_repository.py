@@ -1,76 +1,54 @@
-import pybotters
-import pytest
-
-from crypto_exchanges.repository.bybit.bybit_ws_repository import BybitWsRepository
-from crypto_exchanges.utils import kill_all_asyncio_tasks
-
-
-@pytest.mark.asyncio
-async def test_bybit_ws_repository_real():
-    """BybitのWebsocketのRepositoryを実際のendpointに接続してテストする"""
-
-    async with pybotters.Client() as client:
-        # データストアを作成
-        store = pybotters.BybitDataStore()
-        repo = BybitWsRepository(store=store)
-        await client.ws_connect(
-            "wss://stream.bybit.com/v5/public/linear",
-            send_json={
-                "op": "subscribe",
-                "args": [
-                    "orderbook.50.BTCUSDT",
-                    "publicTrade.BTCUSDT",
-                    "position.BTCUSDT",
-                ],
-            },
-            hdlr_json=store.onmessage,
-        )
-
-        # orderbook
-        await store.orderbook.wait()
-        orderbook = repo.sorted_orderbook()
-        assert len(orderbook.bid) > 0
-        assert len(orderbook.ask) > 0
-
-        # trade
-        await store.trade.wait()
-        trades = repo.trades()
-        assert len(trades) > 0
-
-        await store.position.wait()
-        position = repo.position()
-        assert position.symbol == "BTCUSDT"
-        assert position.side_int == 1
-        assert position.price == 59065.80
-        assert position.volume == 0.001
-
-    await kill_all_asyncio_tasks()
-
-
 # %%
-import asyncio
 import os
 
 import pybotters
+import pytest
 from dotenv import load_dotenv
+
+from crypto_exchanges.adapters.infra.bybit import (
+    BybitOrderRepository,
+    BybitRestRepository,
+    BybitWsRepository,
+)
+from crypto_exchanges.adapters.resolvers.bybit import init_ccxt_bybit
+from crypto_exchanges.core.domain.entities import Symbol
+from crypto_exchanges.utils import kill_all_asyncio_tasks
 
 load_dotenv()
 
 
-async def main():
+@pytest.mark.asyncio
+async def test_bybit_ws_repository():
+    symbol = Symbol.BYBIT_LINEAR_BTCUSDT
+
     apis = {
-        "bybit_demo": [
-            os.environ["BYBIT_API_KEY"],
-            os.environ["BYBIT_SECRET"],
+        "bybit_testnet": [
+            os.environ["BYBIT_API_KEY_TESTNET"],
+            os.environ["BYBIT_SECRET_TESTNET"],
         ],
     }
+    cc = init_ccxt_bybit(mode="testnet")
+
+    rest_repo = BybitRestRepository(cc, 1.0)
+    order_repo = BybitOrderRepository(cc, symbol=symbol)
 
     async with pybotters.Client(apis=apis) as client:
         store = pybotters.BybitDataStore()
-        # repo = BybitWsRepository(store=store)
+        print("initialize public...")
         await client.ws_connect(
-            # testnetでやってみよう
-            "wss://stream-demo.bybit.com/v5/private",
+            "wss://stream-testnet.bybit.com/v5/public/linear",
+            send_json={
+                "op": "subscribe",
+                "args": [
+                    f"orderbook.50.{symbol.to_exchange_symbol()}",
+                    f"publicTrade.{symbol.to_exchange_symbol()}",
+                ],
+            },
+            hdlr_json=store.onmessage,
+        )
+        print("initialize private...")
+        await client.ws_connect(
+            "wss://stream-testnet.bybit.com/v5/private",
             send_json={
                 "op": "subscribe",
                 "args": [
@@ -79,8 +57,42 @@ async def main():
             },
             hdlr_json=store.onmessage,
         )
+        print("initialize done")
+
+        ws_repo = BybitWsRepository(store=store)
+
+        # 1. ノーポジにする
+        positions = rest_repo.fetch_positions(symbol=symbol)
+        total_pos = sum(p.size_with_sign for p in positions)
+        if total_pos != 0:
+            order_repo.create_market_order(size_with_sign=-total_pos)
+
+        # 2. 買う
+        order_repo.create_market_order(size_with_sign=0.001)
+
+        # 3. smoke test
+        print(
+            "waiting ... "
+        )  # 注文からpositionに反映されるまで少しラグがあるので待てる
         await store.position.wait()
-        print(store.position.find())
 
+        # position
+        pos = ws_repo.fetch_positions()
+        assert len(pos) != 0
 
-await main()
+        # executions
+        execs = ws_repo.fetch_executions()
+        assert len(execs) != 0
+
+        # order_book
+        order_book = ws_repo.fetch_order_book()
+        assert len(order_book.ask) != 0
+        assert len(order_book.bid) != 0
+
+        # 4. ノーポジにする
+        positions = rest_repo.fetch_positions(symbol=symbol)
+        total_pos = sum(p.size_with_sign for p in positions)
+        if total_pos != 0:
+            order_repo.create_market_order(size_with_sign=-total_pos)
+
+    await kill_all_asyncio_tasks()

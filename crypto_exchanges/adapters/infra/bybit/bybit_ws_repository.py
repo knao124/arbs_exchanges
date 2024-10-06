@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 import pandas as pd
 import pybotters
 
@@ -6,6 +8,7 @@ from crypto_exchanges.core.domain.entities import (
     OrderBook,
     OrderBookItem,
     Position,
+    Symbol,
 )
 from crypto_exchanges.core.domain.repositories import (
     IExecutionRepository,
@@ -31,8 +34,8 @@ class BybitWsRepository(
         return _to_executions(trade_dicts)
 
     def fetch_positions(self) -> list[Position]:
-        position_dict = self._store.position.find()
-        return [_to_position(position_dict)]
+        position_dicts = self._store.position.find()
+        return [_to_position(position_dict) for position_dict in position_dicts]
 
 
 def _to_orderbook(orderbook_dict: dict) -> OrderBook:
@@ -57,7 +60,7 @@ def _to_orderbook(orderbook_dict: dict) -> OrderBook:
     for key in ["a", "b"]:
         orderbook[key] = [
             OrderBookItem(
-                symbol=item["s"],
+                symbol=Symbol.from_exchange_symbol(item["s"]),
                 side_int=1 if item["S"] == "a" else -1,
                 price=float(item["p"]),
                 volume=float(item["v"]),
@@ -91,7 +94,7 @@ def _to_executions(trade_dicts: dict) -> list[Execution]:
         Execution(
             id=trade["i"],
             ts=pd.Timestamp(int(trade["T"]), unit="ms"),
-            symbol=trade["s"],
+            symbol=Symbol.from_exchange_symbol(trade["s"]),
             side_int=1 if trade["S"] == "Buy" else -1,
             price=float(trade["p"]),
             volume=float(trade["v"]),
@@ -106,16 +109,45 @@ def _to_position(position_dict: dict) -> Position:
 
     position_dictの中身は以下のようになっている。
     {
-        "s": "BTCUSDT",
-        "S": "Buy",
-        "p": "59065.80",
-        "v": "0.001",
-        "L": "PlusTick",
+        "positionIdx": 0,
+        "tradeMode": 0,
+        "riskId": 1,
+        "riskLimitValue": "2000000",
+        "symbol": "BTCUSDT",
+        "side": "Buy",
+        "size": "0.001",
+        "entryPrice": "62573.3",
+        "sessionAvgPrice": "",
+        "leverage": "10",
+        "positionValue": "62.5733",
+        "positionBalance": "0",
+        "markPrice": "62370.78",
+        "positionIM": "6.28830379",
+        "positionMM": "0.34384029",
+        "takeProfit": "0",
+        "stopLoss": "0",
+        "trailingStop": "0",
+        "unrealisedPnl": "-0.20252",
+        "cumRealisedPnl": "-268.71840277",
+        "curRealisedPnl": "-0.03441532",
+        "createdTime": "1727652674337",
+        "updatedTime": "1728210481638",
+        "tpslMode": "Full",
+        "liqPrice": "",
+        "bustPrice": "",
+        "category": "linear",
+        "positionStatus": "Normal",
+        "adlRankIndicator": 1,
+        "autoAddMargin": 0,
+        "leverageSysUpdatedTime": "",
+        "mmrSysUpdatedTime": "",
+        "seq": 9367508781,
+        "isReduceOnly": False,
     }
     """
+    side_int = 1 if position_dict["side"] == "Buy" else -1
     return Position(
-        symbol=position_dict["s"],
-        side_int=1 if position_dict["S"] == "Buy" else -1,
-        price=float(position_dict["p"]),
-        volume=float(position_dict["v"]),
+        symbol=Symbol.from_exchange_symbol(position_dict["symbol"]),
+        entry_price=Decimal(position_dict["entryPrice"]),
+        size_with_sign=Decimal(position_dict["size"]) * side_int,
     )

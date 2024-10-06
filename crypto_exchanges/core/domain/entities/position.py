@@ -1,10 +1,12 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
+from .symbol import Symbol
+
 
 @dataclass
 class Position:
-    symbol: str
+    symbol: Symbol
     entry_price: Decimal
     size_with_sign: Decimal
 
