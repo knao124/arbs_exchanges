@@ -8,7 +8,10 @@ import numpy as np
 from crypto_exchanges.core.domain.entities import Order, OrderType, Symbol
 from crypto_exchanges.core.domain.repositories import IOrderRepository
 
-from .bybit_order_link_id_generator import IOrderLinkIdGenerator
+from .bybit_order_link_id_generator import (
+    BybitDefaultOrderLinkIdGenerator,
+    IOrderLinkIdGenerator,
+)
 
 
 class BybitOrderRepository(IOrderRepository):
@@ -19,22 +22,24 @@ class BybitOrderRepository(IOrderRepository):
     def __init__(
         self,
         ccxt_exchange: ccxt.bybit,
-        order_link_id_generator: IOrderLinkIdGenerator,
         symbol: Symbol,
+        order_link_id_generator: Optional[IOrderLinkIdGenerator] = None,
     ):
         """BybitOrderRepositoryのコンストラクタ
 
         Args:
             ccxt_exchange (ccxt.Exchange): ccxtのexchange
-            order_link_id_generator (IOrderLinkIdGenerator): order_link_idを生成するインターフェース
             symbol (Symbol): 通貨ペア. 通貨ペアの内容によって、requestのparams値が変わるので、依存関係として受け取る
+            order_link_id_generator (Optional[IOrderLinkIdGenerator]): order_link_idを生成するインターフェース. Noneの場合は、defaultのOrderLinkIdGeneratorを使用する
         """
         assert isinstance(ccxt_exchange, ccxt.bybit)
         assert symbol in [Symbol.BYBIT_LINEAR_BTCUSDT]
 
         self._ccxt_exchange = ccxt_exchange
-        self._order_link_id_generator = order_link_id_generator
         self._symbol = symbol
+        self._order_link_id_generator = (
+            order_link_id_generator or BybitDefaultOrderLinkIdGenerator()
+        )
 
         self._logger = getLogger(__class__.__name__)
 
