@@ -146,12 +146,20 @@ def _to_positions(position_dicts: list[dict]) -> list[Position]:
         }
     ]
     """
-    return [
-        Position(
-            symbol=Symbol.from_exchange_symbol(position_dict["product_code"]),
-            side_int=1 if position_dict["side"] == "BUY" else -1,
-            price=Decimal(str(position_dict["price"])),
-            volume=Decimal(str(position_dict["size"])),
+
+    positions = []
+    for position_dict in position_dicts:
+        symbol = Symbol.from_exchange_symbol(position_dict["product_code"])
+        side_int = 1 if position_dict["side"] == "BUY" else -1
+        entry_price = Decimal(str(position_dict["price"]))
+        size_with_sign = Decimal(str(position_dict["size"])) * side_int
+
+        positions.append(
+            Position(
+                symbol=symbol,
+                entry_price=entry_price,
+                size_with_sign=size_with_sign,
+            )
         )
-        for position_dict in position_dicts
-    ]
+
+    return positions
