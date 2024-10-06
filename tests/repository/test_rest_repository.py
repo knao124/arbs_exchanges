@@ -1,6 +1,6 @@
+# %%
 from dataclasses import asdict
 from decimal import Decimal
-from typing import Union
 
 import pytest
 

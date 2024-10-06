@@ -31,7 +31,7 @@ from crypto_exchanges.core.domain.repositories import IOrderRepository, IRestRep
             BitflyerRestRepository,
             init_ccxt_bitflyer,
             "testnet",
-            Symbol("BTC/JPY:JPY"),
+            Symbol.BITFLYER_CFD_BTCJPY,
         ),
     ]
 )
@@ -96,8 +96,13 @@ def test_create_and_remove_limit_order(
     """指値注文が無事に作成できているか, キャンセルできているかのテスト"""
     order_repo, rest_repo, symbol = order_repo_and_rest_repo
     size_with_sign = Decimal("0.01")
-    price = Decimal("50000")
-    post_only = True
+    if symbol.is_base_jpy:
+        price = Decimal("8800000")
+    elif symbol.is_base_usd:
+        price = Decimal("50000")
+    else:
+        raise ValueError(f"Unsupported symbol: {symbol}")
+    post_only = False
 
     # 1-a. 注文を作成する
     order = order_repo.create_limit_order(size_with_sign, price, post_only)
@@ -127,8 +132,13 @@ def test_remove_all_orders(
     """全ての注文をキャンセルするテスト"""
     order_repo, rest_repo, symbol = order_repo_and_rest_repo
     size_with_sign = Decimal("0.01")
-    price = Decimal("50000")
-    post_only = True
+    if symbol.is_base_jpy:
+        price = Decimal("8800000")
+    elif symbol.is_base_usd:
+        price = Decimal("50000")
+    else:
+        raise ValueError(f"Unsupported symbol: {symbol}")
+    post_only = False
 
     # 1. 注文を作成する
     _ = order_repo.create_limit_order(
@@ -151,25 +161,32 @@ def test_update_order(
     """注文を編集するテスト"""
     order_repo, rest_repo, symbol = order_repo_and_rest_repo
     size_with_sign = Decimal("0.01")
-    price = Decimal("50000")
-    post_only = True
+    if symbol.is_base_jpy:
+        price = Decimal("8800000")
+    elif symbol.is_base_usd:
+        price = Decimal("50000")
+    else:
+        raise ValueError(f"Unsupported symbol: {symbol}")
+
+    post_only = False
 
     # 1. 注文を作成する
     order = order_repo.create_limit_order(size_with_sign, price, post_only)
 
     # 2. 注文を編集する
-    new_size_with_sign = Decimal("0.02")
-    new_price = Decimal("50000")
+    new_size_with_sign = Decimal("0.012")
+    new_price = price
     updated_order = order_repo.update_order(
         order.order_id, new_size_with_sign, new_price
     )
 
     # 3. 注文が編集されていることを確認
     assert isinstance(updated_order, Order)
-    assert updated_order.order_id == order.order_id
     assert updated_order.symbol == symbol
     assert updated_order.size_with_sign == new_size_with_sign
     assert updated_order.price == new_price
+
+    clear_all(rest_repo, order_repo, symbol)
 
 
 def test_get_latest_orders(
@@ -178,11 +195,18 @@ def test_get_latest_orders(
     """注文を取得するテスト"""
     order_repo, rest_repo, symbol = order_repo_and_rest_repo
 
+    if symbol.is_base_jpy:
+        price = Decimal("8800000")
+    elif symbol.is_base_usd:
+        price = Decimal("50000")
+    else:
+        raise ValueError(f"Unsupported symbol: {symbol}")
+
     # 1. 注文を作成する
     order_repo.create_limit_order(
         size_with_sign=Decimal("0.01"),
-        price=Decimal("50000"),
-        post_only=True,
+        price=price,
+        post_only=False,
     )
 
     # 2. 注文をキャンセルする

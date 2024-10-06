@@ -81,8 +81,28 @@ class BitflyerRestRepository(
         return positions
 
     def fetch_balance(self) -> Balance:
-        resp = self._ccxt_exchange.fetch_balance()
-        return _to_balance(resp)
+        # 資産の残高を取得
+        res = self._ccxt_exchange.fetch_balance()
+        balance = _to_balance(res)
+
+        # 証拠金を取得
+        res = self._ccxt_exchange.private_get_getcollateral()
+        """
+        以下のようなdictが返される。 証拠金は Balanceじゃなくて Collateral で取得できる
+
+        {'collateral': '183643.000000000000',
+        'open_position_pnl': '0.0',
+        'require_collateral': '88000.0',
+        'keep_rate': '2.0868522727272727272727272727',
+        'margin_call_amount': '0.0',
+        'margin_call_due_date': None}
+
+        see: https://lightning.bitflyer.com/docs?lang=en#get-margin-status
+        """
+        # 証拠金を足す
+        balance.balance_in_jpy += float(res["collateral"])
+
+        return balance
 
     def fetch_fee(
         self,
@@ -368,76 +388,25 @@ def _to_position(position_dict: dict, symbol: str) -> Position:
 
     position_dictの中身は以下のようになっている。
     {
-        "info": {
-            "symbol": "BTCUSDT",
-            "leverage": "10",
-            "autoAddMargin": "0",
-            "avgPrice": "61748.39486486",
-            "liqPrice": "69304.50300242",
-            "riskLimitValue": "2000000",
-            "takeProfit": "",
-            "positionValue": "22846.9061",
-            "isReduceOnly": False,
-            "tpslMode": "Full",
-            "riskId": "1",
-            "trailingStop": "0",
-            "unrealisedPnl": "-20.6109",
-            "markPrice": "61804.1",
-            "adlRankIndicator": "5",
-            "cumRealisedPnl": "-103.06852395",
-            "positionMM": "128.0569087",
-            "createdTime": "1727652674337",
-            "positionIdx": "0",
-            "positionIM": "2298.5129882",
-            "seq": "9367100140",
-            "updatedTime": "1728099583129",
-            "side": "Sell",
-            "bustPrice": "",
-            "positionBalance": "0",
-            "leverageSysUpdatedTime": "",
-            "curRealisedPnl": "-12.56579837",
-            "size": "0.37",
-            "positionStatus": "Normal",
-            "mmrSysUpdatedTime": "",
-            "stopLoss": "",
-            "tradeMode": "0",
-            "sessionAvgPrice": "",
-            "nextPageCursor": "BTCUSDT%2C1728099583129%2C0",
-        },
-        "id": None,
-        "symbol": "BTC/USDT:USDT",
-        "timestamp": 1727652674337,
-        "datetime": "2024-09-29T23:31:14.337Z",
-        "lastUpdateTimestamp": 1728099583129,
-        "initialMargin": 2284.69060999982,
-        "initialMarginPercentage": 0.09999999999999212,
-        "maintenanceMargin": None,
-        "maintenanceMarginPercentage": None,
-        "entryPrice": 61748.39486486,
-        "notional": 22846.9061,
-        "leverage": 10.0,
-        "unrealizedPnl": -20.6109,
-        "realizedPnl": None,
-        "contracts": 0.37,
-        "contractSize": 1.0,
-        "marginRatio": None,
-        "liquidationPrice": 69304.50300242,
-        "markPrice": 61804.1,
-        "lastPrice": None,
-        "collateral": 0.0,
-        "marginMode": None,
-        "side": "short",
-        "percentage": None,
-        "stopLossPrice": None,
-        "takeProfitPrice": None,
+        "product_code": "FX_BTC_JPY",
+        "side": "BUY",
+        "price": "9247803.0",
+        "size": "0.01",
+        "commission": "0.0",
+        "swap_point_accumulate": "0.0",
+        "require_collateral": "46164.995",
+        "open_date": "2024-10-06T08:22:37.6469062Z",
+        "leverage": "2.000000000000",
+        "pnl": "1.70000000000000",
+        "sfd": "0.0",
     }
     """
-    side_int = 1 if position_dict["side"] == "long" else -1
-    size_abs = Decimal(str(position_dict["contracts"]))
+    side_int = 1 if position_dict["side"] == "BUY" else -1
+    size_abs = Decimal(str(position_dict["size"]))
     if size_abs == 0:
         entry_price = Decimal("nan")
     else:
-        entry_price = Decimal(position_dict["entryPrice"])
+        entry_price = Decimal(position_dict["price"])
     return Position(
         symbol=symbol,
         entry_price=entry_price,

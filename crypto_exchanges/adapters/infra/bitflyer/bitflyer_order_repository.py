@@ -37,7 +37,7 @@ class BitflyerOrderRepository(IOrderRepository):
 
         symbol = self._symbol.value
         side = _to_side_str(size_with_sign)
-        amount = abs(size_with_sign)
+        amount = str(abs(size_with_sign))
 
         self._logger.info(
             f"create_market_order(symbol={symbol}, side={side}, amount={amount})"
@@ -67,7 +67,7 @@ class BitflyerOrderRepository(IOrderRepository):
 
         symbol = self._symbol.value
         side = _to_side_str(size_with_sign)
-        amount = abs(size_with_sign)
+        amount = str(abs(size_with_sign))
         price = int(price)
 
         self._logger.info(
@@ -97,7 +97,7 @@ class BitflyerOrderRepository(IOrderRepository):
 
         symbol = self._symbol.value
         side = _to_side_str(size_with_sign)
-        amount = abs(size_with_sign)
+        amount = str(abs(size_with_sign))
         price = int(price)
         order_type = OrderType.LIMIT.value
 
@@ -146,9 +146,9 @@ class BitflyerOrderRepository(IOrderRepository):
     ) -> bool:
         symbol = self._symbol.value
         self._logger.info(f"remove_all_orders(symbol={symbol})")
-        _ = self._ccxt_exchange.cancel_all_orders(
-            symbol=symbol,
-        )
+        open_orders = self.get_open_orders()
+        for open_order in open_orders:
+            self.remove_order(open_order.order_id)
         return True
 
     def get_open_orders(
@@ -161,11 +161,11 @@ class BitflyerOrderRepository(IOrderRepository):
         )
         return [
             Order(
-                order_type=OrderType.LIMIT,
+                order_type=res_dict["type"],
                 order_id=res_dict["id"],
                 symbol=self._symbol,
-                size_with_sign=Decimal(res_dict["amount"]),
-                price=Decimal(res_dict["price"]),
+                size_with_sign=Decimal(str(res_dict["amount"])),
+                price=Decimal(str(res_dict["price"])),
             )
             for res_dict in res_dicts
         ]
@@ -178,14 +178,109 @@ class BitflyerOrderRepository(IOrderRepository):
         res_dicts = self._ccxt_exchange.fetch_closed_orders(
             symbol=symbol,
         )
-        return [
-            Order(
-                # TODO: 注文タイプをどうやって取得するか
-                order_type=res_dict["order_type"],
-                order_id=res_dict["id"],
-                symbol=self._symbol,
-                size_with_sign=Decimal(res_dict["amount"]),
-                price=Decimal(res_dict["price"]),
+        # {
+        #     "id": "JRF20230627-141102-185412",
+        #     "clientOrderId": None,
+        #     "info": {
+        #         "id": "2808714344",
+        #         "child_order_id": "JFX20230627-141102-623226F",
+        #         "product_code": "FX_BTC_JPY",
+        #         "side": "BUY",
+        #         "child_order_type": "LIMIT",
+        #         "price": "4515083.000000000000",
+        #         "average_price": "4515083.000000000000",
+        #         "size": "0.989100000000",
+        #         "child_order_state": "COMPLETED",
+        #         "expire_date": "2023-07-27T14:11:02",
+        #         "child_order_date": "2023-06-27T14:11:02",
+        #         "child_order_acceptance_id": "JRF20230627-141102-185412",
+        #         "outstanding_size": "0.000000000000",
+        #         "cancel_size": "0.000000000000",
+        #         "executed_size": "0.989100000000",
+        #         "total_commission": "0.000000000000",
+        #         "time_in_force": "GTC",
+        #     },
+        #     "timestamp": 1687875062000,
+        #     "datetime": "2023-06-27T14:11:02.000Z",
+        #     "lastTradeTimestamp": None,
+        #     "status": "closed",
+        #     "symbol": "BTC/JPY:JPY",
+        #     "type": "limit",
+        #     "timeInForce": None,
+        #     "postOnly": None,
+        #     "side": "buy",
+        #     "price": 4515083.0,
+        #     "stopPrice": None,
+        #     "triggerPrice": None,
+        #     "cost": 4465868.5953,
+        #     "amount": 0.9891,
+        #     "filled": 0.9891,
+        #     "remaining": 0.0,
+        #     "fee": {"cost": 0.0, "currency": None, "rate": None},
+        #     "average": None,
+        #     "trades": [],
+        #     "fees": [{"cost": 0.0, "currency": None, "rate": None}],
+        #     "lastUpdateTimestamp": None,
+        #     "reduceOnly": None,
+        #     "takeProfitPrice": None,
+        #     "stopLossPrice": None,
+        # }
+        # {
+        #     "id": "JRF20230627-141020-992914",
+        #     "clientOrderId": None,
+        #     "info": {
+        #         "id": "2808715940",
+        #         "child_order_id": "JFX20230627-141233-678100F",
+        #         "product_code": "FX_BTC_JPY",
+        #         "side": "SELL",
+        #         "child_order_type": "MARKET",
+        #         "price": "0.000000000000",
+        #         "average_price": "4492117.000000000000",
+        #         "size": "1.978200000000",
+        #         "child_order_state": "COMPLETED",
+        #         "expire_date": "2023-07-27T14:10:20",
+        #         "child_order_date": "2023-06-27T14:12:32",
+        #         "child_order_acceptance_id": "JRF20230627-141020-992914",
+        #         "outstanding_size": "0.000000000000",
+        #         "cancel_size": "0.000000000000",
+        #         "executed_size": "1.978200000000",
+        #         "total_commission": "0.000000000000",
+        #         "time_in_force": "GTC",
+        #     },
+        #     "timestamp": 1687875152000,
+        #     "datetime": "2023-06-27T14:12:32.000Z",
+        #     "lastTradeTimestamp": None,
+        #     "status": "closed",
+        #     "symbol": "BTC/JPY:JPY",
+        #     "type": "market",
+        #     "timeInForce": "IOC",
+        #     "postOnly": None,
+        #     "side": "sell",
+        #     "price": None,
+        #     "stopPrice": None,
+        #     "triggerPrice": None,
+        #     "cost": None,
+        #     "amount": 1.9782,
+        #     "filled": 1.9782,
+        #     "remaining": 0.0,
+        #     "fee": {"cost": 0.0, "currency": None, "rate": None},
+        #     "average": None,
+        #     "trades": [],
+        #     "fees": [{"cost": 0.0, "currency": None, "rate": None}],
+        #     "lastUpdateTimestamp": None,
+        #     "reduceOnly": None,
+        #     "takeProfitPrice": None,
+        #     "stopLossPrice": None,
+        # }
+        orders = []
+        for res_dict in res_dicts:
+            orders.append(
+                Order(
+                    order_type=res_dict["type"],
+                    order_id=res_dict["id"],
+                    symbol=self._symbol,
+                    size_with_sign=Decimal(str(res_dict["amount"])),
+                    price=Decimal(str(res_dict["info"]["average_price"])),
+                )
             )
-            for res_dict in res_dicts
-        ]
+        return orders
