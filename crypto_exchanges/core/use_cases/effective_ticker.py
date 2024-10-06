@@ -13,7 +13,7 @@ from .interfaces import ITicker
 @dataclass
 class _WsEffectiveTickerConfig:
     symbol: str
-    target_volume: float
+    target_volume: Decimal
 
 
 class EffectiveTicker(ITicker):
@@ -22,7 +22,7 @@ class EffectiveTicker(ITicker):
         orderbook_repository: IOrderBookRepository,
         execution_repository: IExecutionRepository,
         symbol: str,
-        target_volume: float,
+        target_volume: Decimal,
     ):
         self._orderbook_repository = orderbook_repository
         self._execution_repository = execution_repository
@@ -31,7 +31,7 @@ class EffectiveTicker(ITicker):
             target_volume=target_volume,
         )
 
-    def _get_bid_ask(self) -> tuple[float, float]:
+    def _get_bid_ask(self) -> tuple[Decimal, Decimal]:
         target_volume = self._config.target_volume
         orderbook = self._orderbook_repository.fetch_order_book(self._config.symbol)
 
@@ -39,16 +39,16 @@ class EffectiveTicker(ITicker):
         ask_price = get_effective_price(orderbook.ask, target_volume)
         return bid_price, ask_price
 
-    def bid_price(self) -> float:
+    def bid_price(self) -> Decimal:
         bid_price, _ = self._get_bid_ask()
         return bid_price
 
-    def ask_price(self) -> float:
+    def ask_price(self) -> Decimal:
         _, ask_price = self._get_bid_ask()
         return ask_price
 
-    def last_price(self) -> float:
-        executions = self._execution_repository.fetch_executions()
+    def last_price(self) -> Decimal:
+        executions = self._execution_repository.fetch_executions(self._config.symbol)
         if len(executions) == 0:
             return (self.bid_price() + self.ask_price()) * 0.5
         return executions[-1].price
@@ -68,6 +68,7 @@ def get_effective_price(
         float: 取得価格の平均
     """
     total_price = Decimal(0.0)
+    target_volume = Decimal(target_volume)
     rest_volume = Decimal(target_volume)
     for item in orderbook_items:
         volume = Decimal(item.volume)
@@ -83,10 +84,10 @@ def get_effective_price(
             rest_volume = Decimal(0)
 
         # rest_volumeが0になったら、加重平均の分母で割る
-        if rest_volume == 0:
+        if rest_volume == Decimal(0):
             total_price /= target_volume
             break
 
-    if total_price == 0:
+    if total_price == Decimal(0):
         return Decimal("nan")
     return Decimal(total_price)

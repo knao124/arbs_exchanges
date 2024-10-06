@@ -26,21 +26,21 @@ class Ticker(ITicker):
         self._config = _TickerConfig(symbol=symbol)
 
     def bid_price(self) -> Decimal:
-        order_book = self._orderbook_repository.fetch_order_book()
+        order_book = self._orderbook_repository.fetch_order_book(self._config.symbol)
 
         if len(order_book.bid) == 0:
             return Decimal("nan")
         return Decimal(order_book.bid[0].price)
 
     def ask_price(self) -> Decimal:
-        order_book = self._orderbook_repository.fetch_order_book()
+        order_book = self._orderbook_repository.fetch_order_book(self._config.symbol)
 
         if len(order_book.ask) == 0:
             return Decimal("nan")
         return Decimal(order_book.ask[0].price)
 
     def last_price(self) -> Decimal:
-        trades = self._execution_repository.fetch_executions()
+        trades = self._execution_repository.fetch_executions(self._config.symbol)
 
         # 履歴がない場合はask bidの中央を返す
         if len(trades) == 0:

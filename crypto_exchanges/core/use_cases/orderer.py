@@ -91,9 +91,7 @@ class Orderer:
     def cancel_all_limit_orders(self) -> list[Order]:
         canceled_orders = []
         try:
-            open_orders = self._repository.get_open_orders(
-                symbol=self._symbol,
-            )
+            open_orders = self._repository.get_open_orders()
             for order in open_orders:
                 canceled_order = self.cancel_limit_order(
                     order_id=order.order_id,
@@ -106,18 +104,14 @@ class Orderer:
 
     def get_latest_orders(self) -> list[Order]:
         try:
-            orders = self._repository.get_latest_orders(
-                symbol=self._symbol,
-            )
+            orders = self._repository.get_latest_orders()
         except Exception as e:
             raise e
         return orders
 
     def get_open_orders(self) -> list[Order]:
         try:
-            orders = self._repository.get_open_orders(
-                symbol=self._symbol,
-            )
+            orders = self._repository.get_open_orders()
         except Exception as e:
             raise e
         return orders
