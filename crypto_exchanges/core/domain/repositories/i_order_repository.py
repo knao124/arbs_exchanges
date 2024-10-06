@@ -1,14 +1,13 @@
 from abc import ABC, abstractmethod
 from decimal import Decimal
 
-from crypto_exchanges.core.domain.entities import Order, Symbol
+from crypto_exchanges.core.domain.entities import Order
 
 
 class IOrderRepository(ABC):
     @abstractmethod
     def create_market_order(
         self,
-        symbol: Symbol,
         size_with_sign: Decimal,
     ) -> Order:
         pass
@@ -16,7 +15,6 @@ class IOrderRepository(ABC):
     @abstractmethod
     def create_limit_order(
         self,
-        symbol: Symbol,
         size_with_sign: Decimal,
         price: Decimal,
         post_only: bool,
@@ -26,7 +24,6 @@ class IOrderRepository(ABC):
     @abstractmethod
     def update_order(
         self,
-        symbol: Symbol,
         order_id: str,
         size_with_sign: Decimal,
         price: Decimal,
@@ -36,7 +33,6 @@ class IOrderRepository(ABC):
     @abstractmethod
     def remove_order(
         self,
-        symbol: Symbol,
         order_id: str,
     ) -> Order:
         pass
@@ -44,20 +40,17 @@ class IOrderRepository(ABC):
     @abstractmethod
     def remove_all_orders(
         self,
-        symbol: Symbol,
     ) -> bool:
         pass
 
     @abstractmethod
     def get_open_orders(
         self,
-        symbol: Symbol,
     ) -> list[Order]:
         pass
 
     @abstractmethod
     def get_latest_orders(
         self,
-        symbol: Symbol,
     ) -> list[Order]:
         pass

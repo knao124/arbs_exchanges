@@ -23,34 +23,20 @@ from crypto_exchanges.core.domain.repositories import (
 )
 
 
-class BybitRestRepository(
+class BitflyerRestRepository(
     IOrderBookRepository,
     IExecutionRepository,
     IFeeRepository,
     IBalanceRepository,
     IPositionRepository,
 ):
-    def __init__(self, ccxt_exchange: ccxt.Exchange, update_interval_sec: float):
+    def __init__(self, ccxt_exchange: ccxt.bitflyer, update_interval_sec: float):
+        assert isinstance(ccxt_exchange, ccxt.bitflyer)
+
         self._ccxt_exchange = ccxt_exchange
         self._update_interval_sec = update_interval_sec  # TODO: 実装
 
         self._logger = getLogger(__name__)
-
-    def _to_category(self, symbol: Symbol) -> str:
-        """Bybitのカテゴリを返す. 通貨ペアによって変わる
-
-        Args:
-            symbol (Symbol): 通貨ペア
-
-        Raises:
-            ValueError: 通貨ペアが不正な場合
-
-        Returns:
-            str: カテゴリ
-        """
-        if symbol == Symbol.BYBIT_LINEAR_BTCUSDT:
-            return "linear"
-        raise ValueError(f"Invalid symbol: {symbol}")
 
     def fetch_order_book(
         self,
@@ -60,7 +46,6 @@ class BybitRestRepository(
         orderbook_dict = self._ccxt_exchange.fetch_order_book(
             symbol=symbol.value,
             limit=limit,
-            params={"category": self._to_category(symbol)},
         )
         return _to_orderbook(orderbook_dict, symbol)
 
@@ -69,21 +54,29 @@ class BybitRestRepository(
         symbol: Symbol,
         limit: Optional[int] = None,
     ) -> list[Execution]:
-        trades = self._ccxt_exchange.fetch_trades(symbol=symbol.value, limit=limit)
+        trades = self._ccxt_exchange.fetch_trades(
+            symbol=symbol.value,
+            limit=limit,
+        )
         return _to_executions(trades, symbol)
 
     def fetch_positions(
         self,
         symbol: Symbol,
     ) -> list[Position]:
+        # ccxt が fetch_positions にバグがあって使えないので、product_codeを自前で書き換えている
+        if symbol == Symbol.BITFLYER_CFD_BTCJPY:
+            # see: https://lightning.bitflyer.com/docs
+            # `各APIで使用する BTC-CFD/JPY の product_code は FX BTC/JPY の product_code を引き継ぎ、 FX_BTC_JPYとします`
+            product_code = "FX_BTC_JPY"
+        else:
+            raise ValueError(f"Invalid symbol: {symbol}")
         position_dicts = self._ccxt_exchange.fetch_positions(
-            # see: https://bybit-exchange.github.io/docs/v5/position
             symbols=[symbol.value],
-            params={"category": self._to_category(symbol)},
+            params={"product_code": product_code},
         )
         positions = []
         for position_dict in position_dicts:
-            self._logger.info(position_dict)
             positions.append(_to_position(position_dict, symbol))
         return positions
 
@@ -348,7 +341,7 @@ def _safe_get(
     return d
 
 
-def _to_fee(fee_dict: dict, symbol: Symbol) -> Fee:
+def _to_fee(fee_dict: dict, symbol: str) -> Fee:
     """ccxtのfetch_feeの返り値をFeeに変換する
 
     fee_dictの中身は以下のようになっている。
@@ -370,7 +363,7 @@ def _to_fee(fee_dict: dict, symbol: Symbol) -> Fee:
     )
 
 
-def _to_position(position_dict: dict, symbol: Symbol) -> Position:
+def _to_position(position_dict: dict, symbol: str) -> Position:
     """ccxtのfetch_positionsの返り値をPositionに変換する
 
     position_dictの中身は以下のようになっている。

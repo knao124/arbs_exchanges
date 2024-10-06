@@ -3,6 +3,8 @@ from decimal import Decimal
 
 import pandas as pd
 
+from .symbol import Symbol
+
 
 @dataclass
 class Execution:
@@ -10,7 +12,7 @@ class Execution:
 
     id: str
     ts: pd.Timestamp
-    symbol: str
+    symbol: Symbol
     side_int: int
     price: Decimal
     volume: Decimal

@@ -22,7 +22,7 @@ class BybitOrderRepository(IOrderRepository):
         order_link_id_generator: IOrderLinkIdGenerator,
         symbol: Symbol,
     ):
-        """CcxtOrdererのコンストラクタ
+        """BybitOrderRepositoryのコンストラクタ
 
         Args:
             ccxt_exchange (ccxt.Exchange): ccxtのexchange
@@ -30,6 +30,8 @@ class BybitOrderRepository(IOrderRepository):
             symbol (Symbol): 通貨ペア. 通貨ペアの内容によって、requestのparams値が変わるので、依存関係として受け取る
         """
         assert isinstance(ccxt_exchange, ccxt.bybit)
+        assert symbol in [Symbol.BYBIT_LINEAR_BTCUSDT]
+
         self._ccxt_exchange = ccxt_exchange
         self._order_link_id_generator = order_link_id_generator
         self._symbol = symbol
@@ -38,6 +40,14 @@ class BybitOrderRepository(IOrderRepository):
 
     @property
     def _category(self) -> str:
+        """Bybitのカテゴリを返す. 通貨ペアによって変わる
+
+        Raises:
+            ValueError: 通貨ペアが不正な場合
+
+        Returns:
+            str: カテゴリ
+        """
         if self._symbol == Symbol.BYBIT_LINEAR_BTCUSDT:
             return "linear"
         raise ValueError(f"Invalid symbol: {self._symbol}")

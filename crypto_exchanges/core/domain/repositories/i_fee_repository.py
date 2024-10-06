@@ -1,5 +1,5 @@
-from crypto_exchanges.core.domain.entities import Fee
+from crypto_exchanges.core.domain.entities import Fee, Symbol
 
 
 class IFeeRepository:
-    def fetch_fee(self, symbol: str) -> Fee: ...
+    def fetch_fee(self, symbol: Symbol) -> Fee: ...
