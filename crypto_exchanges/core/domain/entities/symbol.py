@@ -12,3 +12,20 @@ class Symbol(Enum):
     @property
     def is_base_usd(self) -> bool:
         return self in [Symbol.BYBIT_LINEAR_BTCUSDT]
+
+    @classmethod
+    def from_exchange_symbol(cls, exchange_symbol: str) -> "Symbol":
+        if exchange_symbol == "BTC/USDT":
+            return Symbol.BYBIT_LINEAR_BTCUSDT
+        elif exchange_symbol == "FX_BTC_JPY":
+            return Symbol.BITFLYER_CFD_BTCJPY
+        else:
+            raise ValueError(f"Invalid exchange symbol: {exchange_symbol}")
+
+    def to_exchange_symbol(self) -> str:
+        if self == Symbol.BYBIT_LINEAR_BTCUSDT:
+            return "BTC/USDT"
+        elif self == Symbol.BITFLYER_CFD_BTCJPY:
+            return "FX_BTC_JPY"
+        else:
+            raise ValueError(f"Invalid symbol: {self}")
