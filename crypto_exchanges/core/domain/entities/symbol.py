@@ -15,12 +15,14 @@ class Symbol(Enum):
         return self in [Symbol.BYBIT_LINEAR_BTCUSDT]
 
     @classmethod
-    def from_exchange_symbol(cls, exchange_symbol: str) -> "Symbol":
-        if exchange_symbol == "BTCUSDT":
+    def from_exchange_name_and_symbol(
+        cls, exchange_name: str, exchange_symbol: str
+    ) -> "Symbol":
+        if exchange_name == "bybit" and exchange_symbol == "BTCUSDT":
             return Symbol.BYBIT_LINEAR_BTCUSDT
-        elif exchange_symbol == "FX_BTC_JPY":
+        elif exchange_name == "bitflyer" and exchange_symbol == "FX_BTC_JPY":
             return Symbol.BITFLYER_CFD_BTCJPY
-        elif exchange_symbol == "BTCUSDT":
+        elif exchange_name == "phemex" and exchange_symbol == "BTCUSDT":
             return Symbol.PHEMEX_LINEAR_BTCUSDT
         else:
             raise ValueError(f"Invalid exchange symbol: {exchange_symbol}")

@@ -1,2 +1,3 @@
 from .phemex_order_repository import PhemexOrderRepository
 from .phemex_rest_repository import PhemexRestRepository
+from .phemex_ws_repository import PhemexWsRepository

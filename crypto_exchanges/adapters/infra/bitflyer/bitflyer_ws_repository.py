@@ -87,7 +87,9 @@ def _to_orderbook(orderbook_dict: dict) -> OrderBook:
     for key in ["asks", "bids"]:
         orderbook[key] = [
             OrderBookItem(
-                symbol=Symbol.from_exchange_symbol(item["product_code"]),
+                symbol=Symbol.from_exchange_name_and_symbol(
+                    "bitflyer", item["product_code"]
+                ),
                 side_int=1 if item["side"] == "bids" else -1,
                 price=Decimal(str(item["price"])),
                 volume=Decimal(str(item["size"])),
@@ -121,7 +123,9 @@ def _to_executions(trade_dicts: dict) -> list[Execution]:
         Execution(
             id=trade["id"],
             ts=pd.Timestamp(trade["exec_date"]),
-            symbol=Symbol.from_exchange_symbol(trade["product_code"]),
+            symbol=Symbol.from_exchange_name_and_symbol(
+                "bitflyer", trade["product_code"]
+            ),
             side_int=1 if trade["side"] == "BUY" else -1,
             price=Decimal(str(trade["price"])),
             volume=Decimal(str(trade["size"])),
@@ -149,7 +153,9 @@ def _to_positions(position_dicts: list[dict]) -> list[Position]:
 
     positions = []
     for position_dict in position_dicts:
-        symbol = Symbol.from_exchange_symbol(position_dict["product_code"])
+        symbol = Symbol.from_exchange_name_and_symbol(
+            "bitflyer", position_dict["product_code"]
+        )
         side_int = 1 if position_dict["side"] == "BUY" else -1
         entry_price = Decimal(str(position_dict["price"]))
         size_with_sign = Decimal(str(position_dict["size"])) * side_int

@@ -25,18 +25,18 @@ from crypto_exchanges.core.domain.repositories import IOrderRepository, IRestRep
 @pytest.fixture(
     params=[
         (
-           BybitOrderRepository,
-           BybitRestRepository,
-           init_ccxt_bybit,
-           "testnet",
-           Symbol("BTC/USDT:USDT"),
+            BybitOrderRepository,
+            BybitRestRepository,
+            init_ccxt_bybit,
+            "testnet",
+            Symbol.BYBIT_LINEAR_BTCUSDT,
         ),
         (
-           BitflyerOrderRepository,
-           BitflyerRestRepository,
-           init_ccxt_bitflyer,
-           "testnet",
-           Symbol.BITFLYER_CFD_BTCJPY,
+            BitflyerOrderRepository,
+            BitflyerRestRepository,
+            init_ccxt_bitflyer,
+            "testnet",
+            Symbol.BITFLYER_CFD_BTCJPY,
         ),
         (
             PhemexOrderRepository,
@@ -55,7 +55,7 @@ def order_repo_and_rest_repo(
 
     if order_repo_class == BybitOrderRepository:
         generator = BybitDefaultOrderLinkIdGenerator()
-        order_repo = order_repo_class(ccxt_exchange, generator, symbol)
+        order_repo = order_repo_class(ccxt_exchange, symbol, generator)
     else:
         order_repo = order_repo_class(ccxt_exchange, symbol)
 

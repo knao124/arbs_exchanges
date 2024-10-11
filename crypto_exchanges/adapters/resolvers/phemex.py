@@ -52,3 +52,7 @@ def set_position_mode_one_way(
             hedged=False,
             symbol=symbol.value,
         )
+
+
+PHEMEX_TESTNET_WS_URL = "wss://testnet-api.phemex.com/ws"
+PHEMEX_REAL_WS_URL = "wss://api.phemex.com/ws"

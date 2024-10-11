@@ -82,24 +82,33 @@ class PhemexRestRepository(
         self,
         symbol: Symbol,
     ) -> Fee:
-        res = self._ccxt_exchange.request(
-            path="api-data/futures/fee-rate",
-            api="private",
-            method="GET",
-            params={"settleCurrency": "USDT"},
-        )
-        maker = None
-        taker = None
-        for symbol_fee_rate in res["data"]["symbolFeeRates"]:
-            if symbol_fee_rate["symbol"] == symbol.to_exchange_symbol():
-                # https://phemex-docs.github.io/#query-contract-fee-rate
-                # const 8 の意味がわからない... 10e7 で割るとあってそうなのでそうする
-                maker = Decimal(symbol_fee_rate["takerFeeRateEr"]) / Decimal(10e7)
-                taker = Decimal(symbol_fee_rate["makerFeeRateEr"]) / Decimal(10e7)
-                break
-        if maker is None or taker is None:
+        # res = self._ccxt_exchange.request(
+        #     path="api-data/futures/fee-rate",
+        #     api="private",
+        #     method="GET",
+        #     params={"settleCurrency": "USDT"},
+        # )
+        # maker = None
+        # taker = None
+        # for symbol_fee_rate in res["data"]["symbolFeeRates"]:
+        #     if symbol_fee_rate["symbol"] == symbol.to_exchange_symbol():
+        #         # https://phemex-docs.github.io/#query-contract-fee-rate
+        #         # const 8 の意味がわからない... 10e7 で割るとあってそうなのでそうする
+        #         maker = Decimal(symbol_fee_rate["takerFeeRateEr"]) / Decimal(10e7)
+        #         taker = Decimal(symbol_fee_rate["makerFeeRateEr"]) / Decimal(10e7)
+        #         break
+        # if maker is None or taker is None:
+        #     raise ValueError(f"Invalid symbol: {symbol}")
+
+        # ないっぽいので、固定値
+        if symbol == Symbol.PHEMEX_LINEAR_BTCUSDT:
+            return Fee(
+                symbol=symbol,
+                maker=Decimal("0.0001"),
+                taker=Decimal("0.0006"),
+            )
+        else:
             raise ValueError(f"Invalid symbol: {symbol}")
-        return Fee(symbol=symbol, maker=maker, taker=taker)
 
 
 def _to_orderbook(orderbook_dict: dict, symbol: str) -> OrderBook:

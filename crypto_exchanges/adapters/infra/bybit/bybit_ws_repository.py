@@ -60,7 +60,7 @@ def _to_orderbook(orderbook_dict: dict) -> OrderBook:
     for key in ["a", "b"]:
         orderbook[key] = [
             OrderBookItem(
-                symbol=Symbol.from_exchange_symbol(item["s"]),
+                symbol=Symbol.from_exchange_name_and_symbol("bybit", item["s"]),
                 side_int=1 if item["S"] == "a" else -1,
                 price=float(item["p"]),
                 volume=float(item["v"]),
@@ -94,7 +94,7 @@ def _to_executions(trade_dicts: dict) -> list[Execution]:
         Execution(
             id=trade["i"],
             ts=pd.Timestamp(int(trade["T"]), unit="ms"),
-            symbol=Symbol.from_exchange_symbol(trade["s"]),
+            symbol=Symbol.from_exchange_name_and_symbol("bybit", trade["s"]),
             side_int=1 if trade["S"] == "Buy" else -1,
             price=float(trade["p"]),
             volume=float(trade["v"]),
@@ -147,7 +147,7 @@ def _to_position(position_dict: dict) -> Position:
     """
     side_int = 1 if position_dict["side"] == "Buy" else -1
     return Position(
-        symbol=Symbol.from_exchange_symbol(position_dict["symbol"]),
+        symbol=Symbol.from_exchange_name_and_symbol("bybit", position_dict["symbol"]),
         entry_price=Decimal(position_dict["entryPrice"]),
         size_with_sign=Decimal(position_dict["size"]) * side_int,
     )

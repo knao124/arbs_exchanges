@@ -70,10 +70,13 @@ async def test_bitflyer_ws_repository():
         )
         # 1. ノーポジにする
         total_pos = sum(p.size_with_sign for p in rest_repo.fetch_positions(symbol))
-        order_repo.create_market_order(size_with_sign=-total_pos)
+        if total_pos != 0:
+            order_repo.create_market_order(size_with_sign=-total_pos)
 
         # 2. 注文
         order_repo.create_market_order(size_with_sign=0.01)
+
+        await store.positions.wait()
 
         # 3. repo の smoke test
         ws_repo = BitflyerWsRepository(store)

@@ -33,7 +33,9 @@ class BybitOrderRepository(IOrderRepository):
             order_link_id_generator (Optional[IOrderLinkIdGenerator]): order_link_idを生成するインターフェース. Noneの場合は、defaultのOrderLinkIdGeneratorを使用する
         """
         assert isinstance(ccxt_exchange, ccxt.bybit)
-        assert symbol in [Symbol.BYBIT_LINEAR_BTCUSDT]
+        assert symbol in [
+            Symbol.BYBIT_LINEAR_BTCUSDT
+        ], f"symbol must be BYBIT_LINEAR_BTCUSDT, but {symbol}"
 
         self._ccxt_exchange = ccxt_exchange
         self._symbol = symbol
