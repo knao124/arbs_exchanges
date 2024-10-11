@@ -4,6 +4,7 @@ from enum import Enum
 class Symbol(Enum):
     BYBIT_LINEAR_BTCUSDT = "BTC/USDT:USDT"
     BITFLYER_CFD_BTCJPY = "BTC/JPY:JPY"
+    PHEMEX_LINEAR_BTCUSDT = "BTC/USDT:USDT"
 
     @property
     def is_base_jpy(self) -> bool:
@@ -19,6 +20,8 @@ class Symbol(Enum):
             return Symbol.BYBIT_LINEAR_BTCUSDT
         elif exchange_symbol == "FX_BTC_JPY":
             return Symbol.BITFLYER_CFD_BTCJPY
+        elif exchange_symbol == "BTCUSDT":
+            return Symbol.PHEMEX_LINEAR_BTCUSDT
         else:
             raise ValueError(f"Invalid exchange symbol: {exchange_symbol}")
 
@@ -27,5 +30,7 @@ class Symbol(Enum):
             return "BTCUSDT"
         elif self == Symbol.BITFLYER_CFD_BTCJPY:
             return "FX_BTC_JPY"
+        elif self == Symbol.PHEMEX_LINEAR_BTCUSDT:
+            return "BTCUSDT"
         else:
             raise ValueError(f"Invalid symbol: {self}")

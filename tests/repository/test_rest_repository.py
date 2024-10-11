@@ -10,8 +10,12 @@ from crypto_exchanges.adapters.infra.bitflyer.bitflyer_rest_repository import (
 from crypto_exchanges.adapters.infra.bybit.bybit_rest_repository import (
     BybitRestRepository,
 )
+from crypto_exchanges.adapters.infra.phemex.phemex_rest_repository import (
+    PhemexRestRepository,
+)
 from crypto_exchanges.adapters.resolvers.bitflyer import init_ccxt_bitflyer
 from crypto_exchanges.adapters.resolvers.bybit import init_ccxt_bybit
+from crypto_exchanges.adapters.resolvers.phemex import init_ccxt_phemex
 from crypto_exchanges.core.domain.entities import (
     Balance,
     Execution,
@@ -36,6 +40,12 @@ from crypto_exchanges.core.domain.repositories import IRestRepository
             init_ccxt_bitflyer,
             "testnet",
             Symbol.BITFLYER_CFD_BTCJPY,
+        ),
+        (
+            PhemexRestRepository,
+            init_ccxt_phemex,
+            "testnet",
+            Symbol.PHEMEX_LINEAR_BTCUSDT,
         ),
     ]
 )
