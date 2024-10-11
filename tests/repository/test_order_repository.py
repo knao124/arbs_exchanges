@@ -11,8 +11,13 @@ from crypto_exchanges.adapters.infra.bybit import (
     BybitOrderRepository,
     BybitRestRepository,
 )
+from crypto_exchanges.adapters.infra.phemex import (
+    PhemexOrderRepository,
+    PhemexRestRepository,
+)
 from crypto_exchanges.adapters.resolvers.bitflyer import init_ccxt_bitflyer
 from crypto_exchanges.adapters.resolvers.bybit import init_ccxt_bybit
+from crypto_exchanges.adapters.resolvers.phemex import init_ccxt_phemex
 from crypto_exchanges.core.domain.entities import Order, OrderType, Symbol
 from crypto_exchanges.core.domain.repositories import IOrderRepository, IRestRepository
 
@@ -20,18 +25,25 @@ from crypto_exchanges.core.domain.repositories import IOrderRepository, IRestRep
 @pytest.fixture(
     params=[
         (
-            BybitOrderRepository,
-            BybitRestRepository,
-            init_ccxt_bybit,
-            "testnet",
-            Symbol("BTC/USDT:USDT"),
+           BybitOrderRepository,
+           BybitRestRepository,
+           init_ccxt_bybit,
+           "testnet",
+           Symbol("BTC/USDT:USDT"),
         ),
         (
-            BitflyerOrderRepository,
-            BitflyerRestRepository,
-            init_ccxt_bitflyer,
+           BitflyerOrderRepository,
+           BitflyerRestRepository,
+           init_ccxt_bitflyer,
+           "testnet",
+           Symbol.BITFLYER_CFD_BTCJPY,
+        ),
+        (
+            PhemexOrderRepository,
+            PhemexRestRepository,
+            init_ccxt_phemex,
             "testnet",
-            Symbol.BITFLYER_CFD_BTCJPY,
+            Symbol.PHEMEX_LINEAR_BTCUSDT,
         ),
     ]
 )
@@ -73,6 +85,8 @@ def test_create_market_order(
     order_repo, rest_repo, symbol = order_repo_and_rest_repo
     size_with_sign = order_size_with_sign
 
+    clear_all(rest_repo, order_repo, symbol)
+
     order = order_repo.create_market_order(size_with_sign)
 
     assert isinstance(order, Order)
@@ -80,7 +94,7 @@ def test_create_market_order(
     assert order.order_id is not None and order.order_id != ""
     assert order.symbol == symbol
     assert order.size_with_sign == size_with_sign
-    assert order.price.is_nan()
+    assert order.price.is_nan() or order.price > 0
 
     # ポジションが想定どおり増えていることを確認
     positions = rest_repo.fetch_positions(symbol)

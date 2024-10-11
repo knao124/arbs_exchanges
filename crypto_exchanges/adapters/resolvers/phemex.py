@@ -4,11 +4,14 @@ from typing import Literal
 import ccxt
 from dotenv import load_dotenv
 
+from crypto_exchanges.core.domain.entities import Symbol
+
 load_dotenv()
 
 
 def init_ccxt_phemex(
     mode: Literal["testnet", "real"],
+    position_mode: Literal["one_way", "hedged"] = "one_way",
 ) -> ccxt.phemex:
     """phemexのccxt exchangeを返す
 
@@ -26,6 +29,8 @@ def init_ccxt_phemex(
             }
         )
         ccxt_phemex.set_sandbox_mode(True)
+        if position_mode == "one_way":
+            set_position_mode_one_way(ccxt_phemex)
         return ccxt_phemex
     elif mode == "real":
         return ccxt.phemex(
@@ -36,3 +41,14 @@ def init_ccxt_phemex(
         )
 
     raise ValueError(f"invalid mode: {mode}")
+
+
+def set_position_mode_one_way(
+    ccxt_phemex: ccxt.phemex,
+):
+    symbols = [Symbol.PHEMEX_LINEAR_BTCUSDT]
+    for symbol in symbols:
+        ccxt_phemex.set_position_mode(
+            hedged=False,
+            symbol=symbol.value,
+        )
