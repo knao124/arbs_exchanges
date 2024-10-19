@@ -1,6 +1,6 @@
 # pip freeze | grep -e autopep8 -e ccxt -e dydx-v3-python -e flake8 -e numpy -e pandas-datareader -e pybotters -e pytest -e python-dotenv -e pytest-cov -e PyYAML -e web3
 ccxt
-numpy
+numpy==1.24.3  # windows だと v2系だと errorが出るので
 numba
 pybotters
 pytest
