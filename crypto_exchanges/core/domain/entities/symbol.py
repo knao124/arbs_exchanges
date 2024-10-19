@@ -5,6 +5,7 @@ class Symbol(Enum):
     BYBIT_LINEAR_BTCUSDT = "BTC/USDT:USDT"
     BITFLYER_CFD_BTCJPY = "BTC/JPY:JPY"
     PHEMEX_LINEAR_BTCUSDT = "BTC/USDT:USDT"
+    OANDA_USDJPY = "USDJPY"
 
     @property
     def is_base_jpy(self) -> bool:
@@ -24,6 +25,8 @@ class Symbol(Enum):
             return Symbol.BITFLYER_CFD_BTCJPY
         elif exchange_name == "phemex" and exchange_symbol == "BTCUSDT":
             return Symbol.PHEMEX_LINEAR_BTCUSDT
+        elif exchange_name == "oanda" and exchange_symbol == "USDJPY":
+            return Symbol.OANDA_USDJPY
         else:
             raise ValueError(f"Invalid exchange symbol: {exchange_symbol}")
 
@@ -34,5 +37,7 @@ class Symbol(Enum):
             return "FX_BTC_JPY"
         elif self == Symbol.PHEMEX_LINEAR_BTCUSDT:
             return "BTCUSDT"
+        elif self == Symbol.OANDA_USDJPY:
+            return "USDJPY"
         else:
             raise ValueError(f"Invalid symbol: {self}")
