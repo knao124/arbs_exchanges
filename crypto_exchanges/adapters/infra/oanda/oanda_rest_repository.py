@@ -37,7 +37,7 @@ class OandaRestRepository(
         """
         tick = self._mt5.symbol_info_tick(symbol.value)
         return OrderBook(
-            asks=[
+            ask=[
                 OrderBookItem(
                     symbol=symbol.value,
                     side_int=-1,
@@ -45,7 +45,7 @@ class OandaRestRepository(
                     volume=Decimal("inf"),
                 )
             ],
-            bids=[
+            bid=[
                 OrderBookItem(
                     symbol=symbol.value,
                     side_int=1,
