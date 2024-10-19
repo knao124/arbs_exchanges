@@ -2,6 +2,7 @@ import math
 from dataclasses import dataclass
 from decimal import Decimal
 from logging import getLogger
+import numpy as np
 
 from crypto_exchanges.core.domain.entities import Order, Symbol
 from crypto_exchanges.core.domain.repositories import (
@@ -80,7 +81,7 @@ class OandaOrderRepository(IOrderRepository):
         self._logger = getLogger(__class__.__name__)
 
     def create_market_order(self, size_with_sign: Decimal) -> Order:
-        price, spread = self._fetch_market_price_and_spread(side_int=side_int)
+        price, spread = self._fetch_market_price_and_spread(side_int=np.sign(size_with_sign))
 
         # spreadが広すぎないかチェック
         if spread > self._spread_max_limit:
@@ -104,7 +105,7 @@ class OandaOrderRepository(IOrderRepository):
         request = {
             # market
             "action": self._mt5_const.TRADE_ACTION_DEAL,
-            "symbol": self._symbol,
+            "symbol": self._symbol.value,
             # buyかsellか
             "type": order_type,
             "volume": lot,
@@ -164,7 +165,7 @@ class OandaOrderRepository(IOrderRepository):
         )
 
     def _fetch_market_price_and_spread(self, side_int: int) -> tuple[float, float]:
-        tick = self._mt5.symbol_info_tick(self._symbol)
+        tick = self._mt5.symbol_info_tick(self._symbol.value)
         ask = tick.ask
         bid = tick.bid
         spread = ask - bid
