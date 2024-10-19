@@ -41,7 +41,7 @@ class OandaRestRepository(
                 OrderBookItem(
                     symbol=symbol.value,
                     side_int=-1,
-                    price=Decimal(tick.ask),
+                    price=Decimal(str(tick.ask)),
                     volume=Decimal("inf"),
                 )
             ],
@@ -49,7 +49,7 @@ class OandaRestRepository(
                 OrderBookItem(
                     symbol=symbol.value,
                     side_int=1,
-                    price=Decimal(tick.bid),
+                    price=Decimal(str(tick.bid)),
                     volume=Decimal("inf"),
                 )
             ],
