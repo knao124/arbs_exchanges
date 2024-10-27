@@ -3,16 +3,16 @@ import os
 import pybotters
 import pytest
 
-from crypto_exchanges.adapters.infra.phemex import (
+from arbs_exchanges.adapters.infra.phemex import (
     PhemexOrderRepository,
     PhemexRestRepository,
     PhemexWsRepository,
 )
-from crypto_exchanges.adapters.resolvers.phemex import (
+from arbs_exchanges.adapters.resolvers.phemex import (
     PHEMEX_TESTNET_WS_URL,
     init_ccxt_phemex,
 )
-from crypto_exchanges.core.domain.entities import Symbol
+from arbs_exchanges.core.domain.entities import Symbol
 
 
 @pytest.mark.asyncio

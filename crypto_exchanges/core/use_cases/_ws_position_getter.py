@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from crypto_exchanges.core.domain.repositories import (
+from arbs_exchanges.core.domain.repositories import (
     IPositionGetter,
     IPositionRepository,
 )

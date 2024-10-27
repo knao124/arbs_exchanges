@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
-from crypto_exchanges.core.domain.entities.order_type import OrderType
-from crypto_exchanges.core.domain.entities.symbol import Symbol
+from arbs_exchanges.core.domain.entities.order_type import OrderType
+from arbs_exchanges.core.domain.entities.symbol import Symbol
 
 
 @dataclass

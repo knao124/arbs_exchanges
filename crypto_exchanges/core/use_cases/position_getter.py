@@ -1,7 +1,7 @@
 from decimal import Decimal
 
-from crypto_exchanges.core.domain.repositories import IPositionRepository
-from crypto_exchanges.core.exceptions import UnexpectedSpecError
+from arbs_exchanges.core.domain.repositories import IPositionRepository
+from arbs_exchanges.core.exceptions import UnexpectedSpecError
 
 
 class PositionGetter:

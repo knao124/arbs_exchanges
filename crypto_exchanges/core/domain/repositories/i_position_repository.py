@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from crypto_exchanges.core.domain.entities import Position, Symbol
+from arbs_exchanges.core.domain.entities import Position, Symbol
 
 
 class IPositionRepository(ABC):

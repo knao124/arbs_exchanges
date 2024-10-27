@@ -1,9 +1,9 @@
 # %%
-from crypto_exchanges.adapters.infra.phemex.phemex_rest_repository import (
+from arbs_exchanges.adapters.infra.phemex.phemex_rest_repository import (
     PhemexRestRepository,
 )
-from crypto_exchanges.adapters.resolvers.phemex import init_ccxt_phemex
-from crypto_exchanges.core.domain.entities import Symbol
+from arbs_exchanges.adapters.resolvers.phemex import init_ccxt_phemex
+from arbs_exchanges.core.domain.entities import Symbol
 
 
 def test_phemex_rest_resository_smoke():

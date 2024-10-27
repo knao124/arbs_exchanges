@@ -5,8 +5,8 @@ from typing import Optional
 import ccxt
 import numpy as np
 
-from crypto_exchanges.core.domain.entities import Order, OrderType, Symbol
-from crypto_exchanges.core.domain.repositories import IOrderRepository
+from arbs_exchanges.core.domain.entities import Order, OrderType, Symbol
+from arbs_exchanges.core.domain.repositories import IOrderRepository
 
 from .bybit_order_link_id_generator import (
     BybitDefaultOrderLinkIdGenerator,

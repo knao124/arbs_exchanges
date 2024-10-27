@@ -1,4 +1,4 @@
-from crypto_exchanges.core.domain.entities import Fee, Symbol
+from arbs_exchanges.core.domain.entities import Fee, Symbol
 
 
 class IFeeRepository:

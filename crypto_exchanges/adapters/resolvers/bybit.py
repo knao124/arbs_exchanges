@@ -4,17 +4,17 @@ from typing import Literal
 
 import ccxt
 
-from crypto_exchanges.adapters.infra.bybit.bybit_order_link_id_generator import (
+from arbs_exchanges.adapters.infra.bybit.bybit_order_link_id_generator import (
     BybitDefaultOrderLinkIdGenerator,
 )
-from crypto_exchanges.adapters.infra.bybit.bybit_order_repository import (
+from arbs_exchanges.adapters.infra.bybit.bybit_order_repository import (
     BybitOrderRepository,
 )
-from crypto_exchanges.adapters.infra.bybit.bybit_rest_repository import (
+from arbs_exchanges.adapters.infra.bybit.bybit_rest_repository import (
     BybitRestRepository,
 )
-from crypto_exchanges.adapters.infra.bybit.bybit_sizer import init_sizer
-from crypto_exchanges.core.use_cases import (
+from arbs_exchanges.adapters.infra.bybit.bybit_sizer import init_sizer
+from arbs_exchanges.core.use_cases import (
     BalanceGetter,
     EffectiveTicker,
     EquityGetter,

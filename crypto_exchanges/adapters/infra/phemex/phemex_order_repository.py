@@ -4,8 +4,8 @@ from logging import getLogger
 
 import ccxt
 
-from crypto_exchanges.core.domain.entities import Order, OrderType, Symbol
-from crypto_exchanges.core.domain.repositories import IOrderRepository
+from arbs_exchanges.core.domain.entities import Order, OrderType, Symbol
+from arbs_exchanges.core.domain.repositories import IOrderRepository
 
 
 def _to_side_str(size_with_sign: Decimal) -> str:

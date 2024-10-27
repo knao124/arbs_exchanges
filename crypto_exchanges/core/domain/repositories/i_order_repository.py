@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from decimal import Decimal
 
-from crypto_exchanges.core.domain.entities import Order
+from arbs_exchanges.core.domain.entities import Order
 
 
 class IOrderRepository(ABC):

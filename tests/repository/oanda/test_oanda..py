@@ -2,11 +2,11 @@ from decimal import Decimal
 
 import MetaTrader5
 
-from crypto_exchanges.adapters.infra.oanda import (
+from arbs_exchanges.adapters.infra.oanda import (
     OandaOrderRepository,
     OandaRestRepository,
 )
-from crypto_exchanges.core.domain.entities import Symbol
+from arbs_exchanges.core.domain.entities import Symbol
 
 
 def test_oanda_smoke():

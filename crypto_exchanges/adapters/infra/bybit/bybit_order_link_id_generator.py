@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from logging import getLogger
 from uuid import uuid4
 
-from crypto_exchanges.core.use_cases import Ticker
+from arbs_exchanges.core.use_cases import Ticker
 
 
 class IOrderLinkIdGenerator(ABC):

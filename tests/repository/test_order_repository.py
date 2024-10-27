@@ -2,24 +2,24 @@ from decimal import Decimal
 
 import pytest
 
-from crypto_exchanges.adapters.infra.bitflyer import (
+from arbs_exchanges.adapters.infra.bitflyer import (
     BitflyerOrderRepository,
     BitflyerRestRepository,
 )
-from crypto_exchanges.adapters.infra.bybit import (
+from arbs_exchanges.adapters.infra.bybit import (
     BybitDefaultOrderLinkIdGenerator,
     BybitOrderRepository,
     BybitRestRepository,
 )
-from crypto_exchanges.adapters.infra.phemex import (
+from arbs_exchanges.adapters.infra.phemex import (
     PhemexOrderRepository,
     PhemexRestRepository,
 )
-from crypto_exchanges.adapters.resolvers.bitflyer import init_ccxt_bitflyer
-from crypto_exchanges.adapters.resolvers.bybit import init_ccxt_bybit
-from crypto_exchanges.adapters.resolvers.phemex import init_ccxt_phemex
-from crypto_exchanges.core.domain.entities import Order, OrderType, Symbol
-from crypto_exchanges.core.domain.repositories import IOrderRepository, IRestRepository
+from arbs_exchanges.adapters.resolvers.bitflyer import init_ccxt_bitflyer
+from arbs_exchanges.adapters.resolvers.bybit import init_ccxt_bybit
+from arbs_exchanges.adapters.resolvers.phemex import init_ccxt_phemex
+from arbs_exchanges.core.domain.entities import Order, OrderType, Symbol
+from arbs_exchanges.core.domain.repositories import IOrderRepository, IRestRepository
 
 
 @pytest.fixture(

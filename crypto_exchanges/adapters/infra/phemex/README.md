@@ -97,10 +97,10 @@ position
 async def main():
     import os
 
-    from crypto_exchanges.adapters.infra.phemex.phemex_order_repository import (
+    from arbs_exchanges.adapters.infra.phemex.phemex_order_repository import (
         PhemexOrderRepository,
     )
-    from crypto_exchanges.adapters.resolvers.phemex import init_ccxt_phemex
+    from arbs_exchanges.adapters.resolvers.phemex import init_ccxt_phemex
 
     apis = {
         "phemex_testnet": [

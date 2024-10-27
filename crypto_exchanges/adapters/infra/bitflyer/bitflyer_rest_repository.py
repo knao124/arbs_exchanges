@@ -5,7 +5,7 @@ from typing import Optional
 import ccxt
 import pandas as pd
 
-from crypto_exchanges.core.domain.entities import (
+from arbs_exchanges.core.domain.entities import (
     Balance,
     Execution,
     Fee,
@@ -14,7 +14,7 @@ from crypto_exchanges.core.domain.entities import (
     Position,
     Symbol,
 )
-from crypto_exchanges.core.domain.repositories import (
+from arbs_exchanges.core.domain.repositories import (
     IBalanceRepository,
     IExecutionRepository,
     IFeeRepository,

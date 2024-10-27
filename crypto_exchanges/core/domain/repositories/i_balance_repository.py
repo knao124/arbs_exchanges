@@ -1,4 +1,4 @@
-from crypto_exchanges.core.domain.entities import Balance
+from arbs_exchanges.core.domain.entities import Balance
 
 
 class IBalanceRepository:

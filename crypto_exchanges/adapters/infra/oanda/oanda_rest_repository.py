@@ -1,13 +1,13 @@
 from decimal import Decimal
 
-from crypto_exchanges.core.domain.entities import (
+from arbs_exchanges.core.domain.entities import (
     Balance,
     OrderBook,
     OrderBookItem,
     Position,
     Symbol,
 )
-from crypto_exchanges.core.domain.repositories import (
+from arbs_exchanges.core.domain.repositories import (
     IBalanceRepository,
     IExecutionRepository,
     IOrderBookRepository,

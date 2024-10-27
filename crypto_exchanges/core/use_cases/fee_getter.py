@@ -3,7 +3,7 @@ from decimal import Decimal
 
 import ccxt
 
-from crypto_exchanges.core.domain.repositories import IFeeRepository
+from arbs_exchanges.core.domain.repositories import IFeeRepository
 
 
 class FeeGetter:

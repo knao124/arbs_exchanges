@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from crypto_exchanges.core.domain.entities import Execution, Symbol
+from arbs_exchanges.core.domain.entities import Execution, Symbol
 
 
 class IExecutionRepository(ABC):

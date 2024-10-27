@@ -5,14 +5,14 @@ from logging import getLogger
 import pandas as pd
 import pybotters
 
-from crypto_exchanges.core.domain.entities import (
+from arbs_exchanges.core.domain.entities import (
     Execution,
     OrderBook,
     OrderBookItem,
     Position,
     Symbol,
 )
-from crypto_exchanges.core.domain.repositories import (
+from arbs_exchanges.core.domain.repositories import (
     IExecutionRepository,
     IOrderBookRepository,
     IPositionRepository,

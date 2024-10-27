@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
-from crypto_exchanges.core.domain.entities import OrderBookItem
-from crypto_exchanges.core.domain.repositories import (
+from arbs_exchanges.core.domain.entities import OrderBookItem
+from arbs_exchanges.core.domain.repositories import (
     IExecutionRepository,
     IOrderBookRepository,
 )

@@ -4,8 +4,8 @@ from decimal import Decimal
 from logging import getLogger
 import numpy as np
 
-from crypto_exchanges.core.domain.entities import Order, Symbol
-from crypto_exchanges.core.domain.repositories import (
+from arbs_exchanges.core.domain.entities import Order, Symbol
+from arbs_exchanges.core.domain.repositories import (
     IOrderRepository,
     IPositionRepository,
 )
@@ -81,7 +81,9 @@ class OandaOrderRepository(IOrderRepository):
         self._logger = getLogger(__class__.__name__)
 
     def create_market_order(self, size_with_sign: Decimal) -> Order:
-        price, spread = self._fetch_market_price_and_spread(side_int=np.sign(size_with_sign))
+        price, spread = self._fetch_market_price_and_spread(
+            side_int=np.sign(size_with_sign)
+        )
 
         # spreadが広すぎないかチェック
         if spread > self._spread_max_limit:

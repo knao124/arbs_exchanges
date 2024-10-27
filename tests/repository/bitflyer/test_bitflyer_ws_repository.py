@@ -3,13 +3,13 @@ import os
 import pybotters
 import pytest
 
-from crypto_exchanges.adapters.infra.bitflyer import (
+from arbs_exchanges.adapters.infra.bitflyer import (
     BitflyerOrderRepository,
     BitflyerRestRepository,
     BitflyerWsRepository,
 )
-from crypto_exchanges.adapters.resolvers.bitflyer import init_ccxt_bitflyer
-from crypto_exchanges.core.domain.entities import Symbol
+from arbs_exchanges.adapters.resolvers.bitflyer import init_ccxt_bitflyer
+from arbs_exchanges.core.domain.entities import Symbol
 
 
 @pytest.mark.asyncio

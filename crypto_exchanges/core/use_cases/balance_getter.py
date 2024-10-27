@@ -1,4 +1,4 @@
-from crypto_exchanges.core.domain.repositories import IBalanceRepository
+from arbs_exchanges.core.domain.repositories import IBalanceRepository
 
 
 class BalanceGetter:

@@ -2,9 +2,9 @@ from decimal import Decimal
 
 import ccxt
 
-from crypto_exchanges.core.domain.repositories import IPositionRepository
-from crypto_exchanges.core.exceptions import UnexpectedSpecError
-from crypto_exchanges.core.use_cases.interfaces import IPositionGetter
+from arbs_exchanges.core.domain.repositories import IPositionRepository
+from arbs_exchanges.core.exceptions import UnexpectedSpecError
+from arbs_exchanges.core.use_cases.interfaces import IPositionGetter
 
 
 class PositionGetter(IPositionGetter):

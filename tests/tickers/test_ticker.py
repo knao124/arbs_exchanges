@@ -1,9 +1,9 @@
 import ccxt
 import pytest
 
-from crypto_exchanges.adapters.infra.bybit import BybitRestRepository
-from crypto_exchanges.core.domain.entities import Symbol
-from crypto_exchanges.core.use_cases.ticker import Ticker
+from arbs_exchanges.adapters.infra.bybit import BybitRestRepository
+from arbs_exchanges.core.domain.entities import Symbol
+from arbs_exchanges.core.use_cases.ticker import Ticker
 
 
 @pytest.mark.parametrize(

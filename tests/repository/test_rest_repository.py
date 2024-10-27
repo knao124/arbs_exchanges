@@ -4,19 +4,19 @@ from decimal import Decimal
 
 import pytest
 
-from crypto_exchanges.adapters.infra.bitflyer.bitflyer_rest_repository import (
+from arbs_exchanges.adapters.infra.bitflyer.bitflyer_rest_repository import (
     BitflyerRestRepository,
 )
-from crypto_exchanges.adapters.infra.bybit.bybit_rest_repository import (
+from arbs_exchanges.adapters.infra.bybit.bybit_rest_repository import (
     BybitRestRepository,
 )
-from crypto_exchanges.adapters.infra.phemex.phemex_rest_repository import (
+from arbs_exchanges.adapters.infra.phemex.phemex_rest_repository import (
     PhemexRestRepository,
 )
-from crypto_exchanges.adapters.resolvers.bitflyer import init_ccxt_bitflyer
-from crypto_exchanges.adapters.resolvers.bybit import init_ccxt_bybit
-from crypto_exchanges.adapters.resolvers.phemex import init_ccxt_phemex
-from crypto_exchanges.core.domain.entities import (
+from arbs_exchanges.adapters.resolvers.bitflyer import init_ccxt_bitflyer
+from arbs_exchanges.adapters.resolvers.bybit import init_ccxt_bybit
+from arbs_exchanges.adapters.resolvers.phemex import init_ccxt_phemex
+from arbs_exchanges.core.domain.entities import (
     Balance,
     Execution,
     Fee,
@@ -24,7 +24,7 @@ from crypto_exchanges.core.domain.entities import (
     Position,
     Symbol,
 )
-from crypto_exchanges.core.domain.repositories import IRestRepository
+from arbs_exchanges.core.domain.repositories import IRestRepository
 
 
 @pytest.fixture(

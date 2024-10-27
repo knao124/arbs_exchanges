@@ -2,9 +2,9 @@ from decimal import Decimal
 from logging import getLogger
 from typing import Optional
 
-from crypto_exchanges.core.domain.entities import Order, Symbol
-from crypto_exchanges.core.domain.repositories import IOrderRepository
-from crypto_exchanges.core.use_cases.interfaces import ISizer
+from arbs_exchanges.core.domain.entities import Order, Symbol
+from arbs_exchanges.core.domain.repositories import IOrderRepository
+from arbs_exchanges.core.use_cases.interfaces import ISizer
 
 
 class Orderer:

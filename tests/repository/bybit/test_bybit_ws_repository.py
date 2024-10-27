@@ -5,14 +5,14 @@ import pybotters
 import pytest
 from dotenv import load_dotenv
 
-from crypto_exchanges.adapters.infra.bybit import (
+from arbs_exchanges.adapters.infra.bybit import (
     BybitOrderRepository,
     BybitRestRepository,
     BybitWsRepository,
 )
-from crypto_exchanges.adapters.resolvers.bybit import init_ccxt_bybit
-from crypto_exchanges.core.domain.entities import Symbol
-from crypto_exchanges.utils import kill_all_asyncio_tasks
+from arbs_exchanges.adapters.resolvers.bybit import init_ccxt_bybit
+from arbs_exchanges.core.domain.entities import Symbol
+from arbs_exchanges.utils import kill_all_asyncio_tasks
 
 load_dotenv()
 

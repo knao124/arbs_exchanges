@@ -4,7 +4,7 @@ from typing import Literal
 import ccxt
 from dotenv import load_dotenv
 
-from crypto_exchanges.core.domain.entities import Symbol
+from arbs_exchanges.core.domain.entities import Symbol
 
 load_dotenv()
 
